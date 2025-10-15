@@ -9,7 +9,6 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "ZDN Smart Energy - Professional Measuring Equipment",
   description: "Laboratory, industrial, and food industry measuring equipment",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
