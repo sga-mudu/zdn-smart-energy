@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import Link from "next/link"
+import { AllTogether } from "./all-products-section/allTogether"
 
 const products = [
   {
@@ -11,7 +13,7 @@ const products = [
     name: "ZE 114",
     description: "Тэр ёсны онол гарын үйлдвэрийн төхөөрөмж",
     image: "/digital-timer-control-panel-laboratory.jpg",
-    brand: '../brands/brand1.png',
+    brand: "../brands/brand1.png",
   },
   {
     id: 2,
@@ -90,18 +92,19 @@ export default function ProductsSection() {
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">ОНЦЛОХ БҮТЭЭГДЭХҮҮН</h2>
-          <a
-            href="#all-products"
-            className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1 whitespace-nowrap"
-          >
-            <span className="hidden sm:inline">БУСАД БҮТЭЭГДЭХҮҮН</span>
-            <span className="sm:hidden">БУСАД</span>
-            <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-          </a>
+          <Link href="/all-products">
+            <Button
+              variant="link"
+              className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1 whitespace-nowrap"
+            >
+              <span className="hidden sm:inline">БУСАД БҮТЭЭГДЭХҮҮН</span>
+              <span className="sm:hidden">БУСАД</span>
+              <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+            </Button>
+          </Link>
         </div>
 
         <div className="relative bg-secondary rounded-lg border border-border p-2 shadow-md">
-
           <Button
             variant="outline"
             size="icon"

@@ -6,6 +6,7 @@ import BrandsSection from "@/components/brands-section"
 import WindEnergySection from "@/components/wind-energy-section"
 import FeaturesSection from "@/components/features-section"
 import Footer from "@/components/footer"
+import { AllTogether } from "@/components/all-products-section/allTogether"
 
 export default function Home() {
   return (
