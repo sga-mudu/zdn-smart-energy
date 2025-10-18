@@ -71,36 +71,36 @@ export function CategorySidebar() {
     }
 
     return (
-        <div className="p-4">
-            <h2 className="mb-4 text-sm font-semibold text-foreground">Бүтээгдэхүүний төрөл</h2>
+        <div className="p-2 lg:p-4">
+            <h2 className="mb-3 lg:mb-4 text-sm font-semibold text-foreground hidden lg:block">Бүтээгдэхүүний төрөл</h2>
             <nav className="space-y-1">
                 {categories.map((category) => (
                     <div key={category.id}>
                         <button
                             onClick={() => toggleCategory(category.id)}
                             className={cn(
-                                "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                                "flex w-full items-center justify-between rounded-md px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
                                 expandedCategories.has(category.id) ? "bg-accent text-accent-foreground" : "text-muted-foreground",
                             )}
                         >
                             <span className="text-left">{category.name}</span>
                             {category.subcategories && (
-                                <span className="ml-2 flex-shrink-0">
+                                <span className="ml-1 lg:ml-2 flex-shrink-0">
                                     {expandedCategories.has(category.id) ? (
-                                        <ChevronDown className="h-4 w-4" />
+                                        <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
                                     ) : (
-                                        <ChevronRight className="h-4 w-4" />
+                                        <ChevronRight className="h-3 w-3 lg:h-4 lg:w-4" />
                                     )}
                                 </span>
                             )}
                         </button>
 
                         {category.subcategories && expandedCategories.has(category.id) && (
-                            <div className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
+                            <div className="ml-3 lg:ml-4 mt-1 space-y-1 border-l border-border pl-1 lg:pl-2">
                                 {category.subcategories.map((subcategory) => (
                                     <button
                                         key={subcategory.id}
-                                        className="block w-full rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                        className="block w-full rounded-md px-2 lg:px-3 py-1 lg:py-1.5 text-left text-xs lg:text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                                     >
                                         {subcategory.name}
                                     </button>

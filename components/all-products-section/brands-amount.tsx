@@ -63,29 +63,32 @@ const brands: Brand[] = [
 
 export function BrandSection() {
     return (
-        <div className="mb-8">
-            <h2 className="mb-6 text-2xl font-bold uppercase tracking-wide text-muted-foreground">БРЭНДҮҮД</h2>
-            <div className="grid grid-cols-1 gap-0 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-6 lg:mb-8 rounded-lg border p-4 lg:p-5 border-border bg-card">
+            <h2 className="mb-4 lg:mb-6 text-xl lg:text-2xl font-bold uppercase tracking-wide text-muted-foreground text-center lg:text-left">
+                БРЭНДҮҮД
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-0">
                 {brands.map((brand) => (
                     <Card
                         key={brand.id}
-                        className="flex flex-row m-2 cursor-pointer items-center gap-4 rounded-lg p-3s transition-all hover:bg-accent/50"
+                        className="flex flex-row m-1 lg:m-2 cursor-pointer items-center gap-3 lg:gap-4 rounded-lg p-3 transition-all hover:bg-accent/50"
                     >
-                        <div className="flex h-12 w-30 flex-shrink-0 items-center justify-center">
+                        <div className="flex h-10 w-20 lg:h-12 lg:w-30 flex-shrink-0 items-center justify-center">
                             <Image
                                 src={brand.logo || "/placeholder.svg"}
                                 alt={brand.name}
-                                width={100}
-                                height={60}
+                                width={80}
+                                height={40}
+                                className="object-contain"
                             />
                         </div>
-                        <div className="grid gap-3 items-center">
-                            <div className="mr-4 text-left">
-                                <h3 className="text-sm font-bold text-foreground">{brand.name}</h3>
+                        <div className="grid gap-2 lg:gap-3 items-center flex-1">
+                            <div className="text-left">
+                                <h3 className="text-xs lg:text-sm font-bold text-foreground">{brand.name}</h3>
                                 <p className="text-xs text-muted-foreground">{brand.subtitle}</p>
                             </div>
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-                                <span className="text-sm font-semibold text-muted-foreground">{brand.productCount}</span>
+                            <div className="flex h-6 w-6 lg:h-8 lg:w-8 items-center justify-center rounded-full bg-muted">
+                                <span className="text-xs lg:text-sm font-semibold text-muted-foreground">{brand.productCount}</span>
                             </div>
                         </div>
                     </Card>

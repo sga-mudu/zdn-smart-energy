@@ -17,37 +17,32 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
     return (
-        <Card className="group relative overflow-hidden transition-all hover:shadow-lg">
-            <CardContent className="p-4">
-                {/* Product Image */}
-                <div className="mb-3 flex h-48 items-center justify-center bg-muted/30">
+        <Card className="group relative overflow-hidden transition-all hover:shadow-lg w-full mx-auto">
+            <CardContent className="p-3 lg:p-4">
+                <div className="mb-2 lg:mb-3 flex h-32 sm:h-40 lg:h-48 items-center justify-center bg-muted/30">
                     <Image
                         src={product.image || "/placeholder.svg"}
                         alt={product.name}
-                        width={180}
-                        height={180}
+                        width={120}
+                        height={120}
                         className="object-contain transition-transform group-hover:scale-105"
                     />
                 </div>
-
-                {/* Product Code */}
-                <h3 className="mb-2 text-sm font-bold text-foreground">{product.code}</h3>
-
-                {/* Product Description */}
-                <p className="mb-3 line-clamp-3 text-sm text-muted-foreground">{product.name}</p>
-
-                {/* Brand Logo and Checkbox */}
+                <h3 className="mb-1 text-xs sm:text-sm lg:text-base font-bold text-foreground">
+                    {product.code}
+                </h3>
+                <p className="mb-2 text-xs text-muted-foreground line-clamp-2 sm:line-clamp-3">
+                    {product.name}
+                </p>
                 <div className="flex items-center justify-between">
-                    <div className="flex h-8 items-center">
-                        <Image
-                            src={product.brandLogo || "/placeholder.svg"}
-                            alt={product.brandName}
-                            width={60}
-                            height={30}
-                            className="object-contain"
-                        />
-                    </div>
-                    <Checkbox className="h-5 w-5" />
+                    <Image
+                        src={product.brandLogo || "/placeholder.svg"}
+                        alt={product.brandName}
+                        width={50}
+                        height={25}
+                        className="object-contain"
+                    />
+                    <Checkbox className="h-4 w-4 lg:h-5 lg:w-5" />
                 </div>
             </CardContent>
         </Card>

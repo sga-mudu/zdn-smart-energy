@@ -9,14 +9,26 @@ export function AllTogether() {
     return (<>
         <section className="bg-background min-h-screen" id="all-products">
             <Header />
-            <div className="flex min-h-screen bg-background">
-                {/* Left Sidebar - Categories */}
-                <aside className="w-64 border-r border-border bg-card">
+            <div className="flex flex-col lg:flex-row min-h-screen bg-background">
+                {/* Mobile Category Toggle - Hidden on desktop */}
+                <div className="lg:hidden m-4">
+                    <details className="border rounded-lg border-border bg-card">
+                        <summary className="p-4 text-sm font-semibold cursor-pointer">
+                            Бүтээгдэхүүний төрөл
+                        </summary>
+                        <div className="px-4 pb-4">
+                            <CategorySidebar />
+                        </div>
+                    </details>
+                </div>
+
+                {/* Left Sidebar - Categories - Hidden on mobile */}
+                <div className="hidden lg:block w-64 border ml-5 mt-5 rounded-lg border-border bg-card sticky top-16 h-fit self-start">
                     <CategorySidebar />
-                </aside>
+                </div>
 
                 {/* Main Content Area */}
-                <main className="flex-1 p-6">
+                <main className="flex-1 p-4 lg:p-6">
                     {/* Brand Section */}
                     <BrandSection />
 
