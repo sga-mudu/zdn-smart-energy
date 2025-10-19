@@ -1,4 +1,5 @@
-import { Footer } from "react-day-picker";
+
+import Footer from "../footer";
 import FeaturesSection from "../features-section";
 import Header from "../header";
 import { BrandSection } from "./brands-amount";

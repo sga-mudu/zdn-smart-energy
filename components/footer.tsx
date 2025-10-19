@@ -5,7 +5,7 @@ import type React from "react"
 import { Send } from "lucide-react"
 import { useState } from "react"
 
-export default function Footer() {
+function Footer() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -142,3 +142,5 @@ export default function Footer() {
     </footer>
   )
 }
+
+export default Footer;

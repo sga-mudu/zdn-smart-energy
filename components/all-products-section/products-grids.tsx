@@ -147,7 +147,7 @@ export function ProductGrid() {
     }
 
     return (
-        <div className="border p-4 lg:p-5 rounded-lg border-border bg-card">
+        <div className="border p-4 lg:p-5 rounded-lg border-border bg-card" id="products">
             <div className="text-center mb-4 lg:mb-6 rounded-lg bg-gray-700 py-3 px-4 lg:pl-6 text-sm lg:text-md text-white">
                 <h3>Бүтээгдэхүүний баруун доод булан дээр даран бүтээгдэхүүний танилцуулгыг татах боломжтой.</h3>
             </div>

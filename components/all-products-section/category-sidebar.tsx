@@ -58,7 +58,7 @@ const categories: Category[] = [
 ]
 
 export function CategorySidebar() {
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["1"]))
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
     const toggleCategory = (categoryId: string) => {
         const newExpanded = new Set(expandedCategories)
@@ -73,19 +73,20 @@ export function CategorySidebar() {
     return (
         <div className="p-2 lg:p-4">
             <h2 className="mb-3 lg:mb-4 text-sm font-semibold text-foreground hidden lg:block">Бүтээгдэхүүний төрөл</h2>
-            <nav className="space-y-1">
+            <nav className="space-y-2">
                 {categories.map((category) => (
                     <div key={category.id}>
                         <button
                             onClick={() => toggleCategory(category.id)}
                             className={cn(
-                                "flex w-full items-center justify-between rounded-md px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-                                expandedCategories.has(category.id) ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                                "flex w-full items-center justify-between rounded-md px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm transition-colors",
+                                expandedCategories.has(category.id) ? "bg-accent text-accent-foreground" : "text-foreground",
+                                "hover:bg-[rgba(15,78,147,1)] hover:text-white"
                             )}
                         >
-                            <span className="text-left">{category.name}</span>
+                            <span className="text-left flex-1">{category.name}</span>
                             {category.subcategories && (
-                                <span className="ml-1 lg:ml-2 flex-shrink-0">
+                                <span className="flex-shrink-0 ml-2">
                                     {expandedCategories.has(category.id) ? (
                                         <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
                                     ) : (
@@ -100,9 +101,9 @@ export function CategorySidebar() {
                                 {category.subcategories.map((subcategory) => (
                                     <button
                                         key={subcategory.id}
-                                        className="block w-full rounded-md px-2 lg:px-3 py-1 lg:py-1.5 text-left text-xs lg:text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                        className="flex w-full items-center justify-between rounded-md px-2 lg:px-3 py-1 lg:py-1.5 text-left text-xs lg:text-sm text-foreground transition-colors hover:bg-[rgba(15,78,147,1)] hover:text-white"
                                     >
-                                        {subcategory.name}
+                                        <span className="text-left flex-1">{subcategory.name}</span>
                                     </button>
                                 ))}
                             </div>
