@@ -8,67 +8,51 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 interface Brand {
     id: string
     name: string
-    subtitle: string
-    logo: string
+    subtitle?: string | null
+    logo: string | null
     productCount: number
 }
 
-const brands: Brand[] = [
-    {
-        id: "1",
-        name: "ZPA Smart Energy",
-        subtitle: "Европ чанар",
-        logo: "../brands/brand1.png",
-        productCount: 4,
-    },
-    {
-        id: "2",
-        name: "CALMET",
-        subtitle: "Европ чанар",
-        logo: "../brands/brand2.png",
-        productCount: 8,
-    },
-    {
-        id: "3",
-        name: "KERN",
-        subtitle: "Европ чанар",
-        logo: "../brands/brand3.png",
-        productCount: 12,
-    },
-    {
-        id: "4",
-        name: "SAUTER",
-        subtitle: "Европ чанар",
-        logo: "../brands/brand4.png",
-        productCount: 6,
-    },
-    {
-        id: "5",
-        name: "OKOndt GROUP",
-        subtitle: "Европ чанар",
-        logo: "../brands/brand5.png",
-        productCount: 3,
-    },
-    {
-        id: "6",
-        name: "KERN OPTICS",
-        subtitle: "Европ чанар",
-        logo: "../brands/brand1.png",
-        productCount: 5,
-    },
-    {
-        id: "7",
-        name: "G HORIT",
-        subtitle: "Дэвшилтэт технологи",
-        logo: "../brands/brand1.png",
-        productCount: 7,
-    },
-]
+interface BrandSectionProps {
+    onBrandSelect?: (brandId: string | null) => void
+    selectedBrand?: string | null
+}
 
-export function BrandSection() {
+export function BrandSection({ onBrandSelect, selectedBrand }: BrandSectionProps) {
+    const [brands, setBrands] = useState<Brand[]>([])
+    const [loading, setLoading] = useState(true)
     const [currentIndex, setCurrentIndex] = useState(0)
     const [isAutoPlaying, setIsAutoPlaying] = useState(true)
     const [itemsToShow, setItemsToShow] = useState(1)
+
+    // Fetch brands from database
+    useEffect(() => {
+        fetch("/api/brands")
+            .then((res) => res.json())
+            .then((data) => {
+                // Map API data to component format
+                const mappedBrands = data.map((brand: any) => ({
+                    id: brand.name, // Use name as ID for filtering
+                    name: brand.name,
+                    subtitle: brand.description || "Европ чанар",
+                    logo: brand.logo,
+                    productCount: brand.productCount || 0
+                }))
+                setBrands(mappedBrands)
+                setLoading(false)
+            })
+            .catch((error) => {
+                console.error("Error fetching brands:", error)
+                setLoading(false)
+            })
+    }, [])
+
+    const handleBrandClick = (brandId: string) => {
+        if (onBrandSelect) {
+            // Toggle: if clicking the same brand, deselect it
+            onBrandSelect(selectedBrand === brandId ? null : brandId)
+        }
+    }
 
     // Update items to show based on screen size
     useEffect(() => {
@@ -90,7 +74,7 @@ export function BrandSection() {
 
     // Auto-rotate brands every 3 seconds (mobile/tablet only)
     useEffect(() => {
-        if (!isAutoPlaying || itemsToShow >= 4) return
+        if (!isAutoPlaying || itemsToShow >= 4 || brands.length === 0) return
 
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => {
@@ -100,7 +84,7 @@ export function BrandSection() {
         }, 3000)
 
         return () => clearInterval(interval)
-    }, [isAutoPlaying, itemsToShow])
+    }, [isAutoPlaying, itemsToShow, brands.length])
 
     const nextBrand = () => {
         setCurrentIndex((prevIndex) => {
@@ -136,6 +120,7 @@ export function BrandSection() {
 
     // Get current brands to display
     const getCurrentBrands = () => {
+        if (brands.length === 0) return []
         const currentBrands = []
         for (let i = 0; i < itemsToShow; i++) {
             const index = (currentIndex + i) % brands.length
@@ -145,10 +130,10 @@ export function BrandSection() {
     }
 
     // Calculate total slides for dot indicators
-    const totalSlides = Math.ceil(brands.length / itemsToShow)
+    const totalSlides = brands.length === 0 ? 0 : Math.ceil(brands.length / itemsToShow)
 
     // Calculate current slide index for dot indicators
-    const currentSlide = Math.floor(currentIndex / itemsToShow)
+    const currentSlide = brands.length === 0 ? 0 : Math.floor(currentIndex / itemsToShow)
 
     return (
         <div className="mb-6 lg:mb-8 rounded-lg border p-4 lg:p-5 border-border bg-card">
@@ -156,7 +141,17 @@ export function BrandSection() {
                 БРЭНДҮҮД
             </h2>
 
-            {/* Mobile/Tablet Carousel (hidden on desktop) */}
+            {loading ? (
+                <div className="py-8 text-center">
+                    <p className="text-muted-foreground">Брэндууд ачаалж байна...</p>
+                </div>
+            ) : brands.length === 0 ? (
+                <div className="py-8 text-center">
+                    <p className="text-muted-foreground">Брэнд олдсонгүй.</p>
+                </div>
+            ) : (
+                <>
+                    {/* Mobile/Tablet Carousel (hidden on desktop) */}
             <div className="lg:hidden relative">
                 {/* Navigation Arrows */}
                 <button
@@ -181,7 +176,8 @@ export function BrandSection() {
                     {getCurrentBrands().map((brand, index) => (
                         <Card
                             key={`${brand.id}-${currentIndex + index}`}
-                            className={`flex flex-row cursor-pointer items-center gap-3 rounded-lg p-3 transition-all hover:bg-accent/50 ${itemsToShow === 2 ? 'flex-1 min-w-0' : 'w-full'
+                            onClick={() => handleBrandClick(brand.id)}
+                            className={`flex flex-row cursor-pointer items-center gap-3 rounded-lg p-3 transition-all hover:bg-accent/50 ${selectedBrand === brand.id ? 'bg-primary/10 border-primary' : ''} ${itemsToShow === 2 ? 'flex-1 min-w-0' : 'w-full'
                                 }`}
                         >
                             <div className={`flex flex-shrink-0 items-center justify-center ${itemsToShow === 2 ? 'h-12 w-16' : 'h-16 w-24'
@@ -239,7 +235,8 @@ export function BrandSection() {
                 {brands.map((brand) => (
                     <Card
                         key={brand.id}
-                        className="flex flex-row m-2 cursor-pointer items-center gap-4 rounded-lg p-3 transition-all hover:bg-accent/50"
+                        onClick={() => handleBrandClick(brand.id)}
+                        className={`flex flex-row m-2 cursor-pointer items-center gap-4 rounded-lg p-3 transition-all hover:bg-accent/50 ${selectedBrand === brand.id ? 'bg-primary/10 border-primary' : ''}`}
                     >
                         <div className="flex h-12 w-30 flex-shrink-0 items-center justify-center">
                             <Image
@@ -262,6 +259,8 @@ export function BrandSection() {
                     </Card>
                 ))}
             </div>
+                </>
+            )}
         </div>
     )
 }

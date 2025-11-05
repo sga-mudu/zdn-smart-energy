@@ -14,7 +14,7 @@ export default function Header() {
       <div className="container mx-auto px-4 md:px-0 py-3 md:py-1 flex items-center justify-between">
         <Link href="/" className="flex items-center">
           <Image
-            src="./zdn-logo.png"
+            src="/zdn-logo.png"
             alt="ZDN Smart Energy"
             width={120}
             height={50}
@@ -25,7 +25,7 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-12">
-          <Link href="#products" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
+          <Link href="/all-products" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
             БҮТЭЭГДЭХҮҮН
           </Link>
           <Link href="#about" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
@@ -45,7 +45,7 @@ export default function Header() {
         <div className="md:hidden bg-white border-t border-border">
           <nav className="container mx-auto px-4 py-4 flex flex-col gap-4">
             <Link
-              href="#products"
+              href="/all-products"
               className="text-sm text-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >

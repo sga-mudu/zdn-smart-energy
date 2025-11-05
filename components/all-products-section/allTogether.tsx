@@ -1,4 +1,6 @@
+"use client"
 
+import { useState } from "react"
 import Footer from "../footer";
 import FeaturesSection from "../features-section";
 import Header from "../header";
@@ -7,6 +9,8 @@ import { CategorySidebar } from "./category-sidebar";
 import { ProductGrid } from "./products-grids";
 
 export function AllTogether() {
+    const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+
     return (<>
         <section className="bg-background min-h-screen" id="all-products">
             <Header />
@@ -31,10 +35,10 @@ export function AllTogether() {
                 {/* Main Content Area */}
                 <main className="flex-1 p-4 lg:p-6">
                     {/* Brand Section */}
-                    <BrandSection />
+                    <BrandSection onBrandSelect={setSelectedBrand} selectedBrand={selectedBrand} />
 
                     {/* Product Grid */}
-                    <ProductGrid />
+                    <ProductGrid selectedBrand={selectedBrand} />
                 </main>
             </div>
             <FeaturesSection />
