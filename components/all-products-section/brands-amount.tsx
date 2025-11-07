@@ -28,21 +28,35 @@ export function BrandSection({ onBrandSelect, selectedBrand }: BrandSectionProps
     // Fetch brands from database
     useEffect(() => {
         fetch("/api/brands")
-            .then((res) => res.json())
+            .then(async (res) => {
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({}))
+                    const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${res.status}`
+                    throw new Error(errorMessage)
+                }
+                return res.json()
+            })
             .then((data) => {
-                // Map API data to component format
-                const mappedBrands = data.map((brand: any) => ({
-                    id: brand.name, // Use name as ID for filtering
-                    name: brand.name,
-                    subtitle: brand.description || "Европ чанар",
-                    logo: brand.logo,
-                    productCount: brand.productCount || 0
-                }))
-                setBrands(mappedBrands)
+                // Ensure data is an array
+                if (Array.isArray(data)) {
+                    // Map API data to component format
+                    const mappedBrands = data.map((brand: any) => ({
+                        id: brand.name, // Use name as ID for filtering
+                        name: brand.name,
+                        subtitle: brand.description || "Европ чанар",
+                        logo: brand.logo,
+                        productCount: brand.productCount || 0
+                    }))
+                    setBrands(mappedBrands)
+                } else {
+                    console.error("Invalid brands data:", data)
+                    setBrands([])
+                }
                 setLoading(false)
             })
             .catch((error) => {
                 console.error("Error fetching brands:", error)
+                setBrands([])
                 setLoading(false)
             })
     }, [])
@@ -50,7 +64,11 @@ export function BrandSection({ onBrandSelect, selectedBrand }: BrandSectionProps
     const handleBrandClick = (brandId: string) => {
         if (onBrandSelect) {
             // Toggle: if clicking the same brand, deselect it
-            onBrandSelect(selectedBrand === brandId ? null : brandId)
+            const newSelection = selectedBrand === brandId ? null : brandId
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Brand clicked:', { brandId, newSelection, previousSelection: selectedBrand })
+            }
+            onBrandSelect(newSelection)
         }
     }
 

@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+import { env } from "@/lib/env"
 import bcrypt from "bcryptjs"
 
 export const authOptions: NextAuthOptions = {
@@ -16,25 +17,34 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials")
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        })
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          })
 
-        if (!user || !await bcrypt.compare(credentials.password, user.password)) {
+          if (!user || !await bcrypt.compare(credentials.password, user.password)) {
+            throw new Error("Invalid credentials")
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+          }
+        } catch (error) {
+          // Log error but don't expose details
+          if (env.isDevelopment) {
+            console.error("Auth error:", error)
+          }
           throw new Error("Invalid credentials")
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role
         }
       }
     })
   ],
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/admin/login"
@@ -55,7 +65,8 @@ export const authOptions: NextAuthOptions = {
       return session
     }
   },
-  secret: process.env.NEXTAUTH_SECRET
+  secret: env.NEXTAUTH_SECRET,
+  debug: env.isDevelopment,
 }
 
 const handler = NextAuth(authOptions)

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { Send } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
 
 function Footer() {
   const [formData, setFormData] = useState({
@@ -12,11 +13,45 @@ function Footer() {
     phone: "",
     message: "",
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log("Form submitted:", formData)
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send message")
+      }
+
+      toast.success("Баярлалаа! Таны мессежийг хүлээн авлаа. Бид удахгүй холбогдох болно.")
+      
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+      })
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Мессеж илгээхэд алдаа гарлаа. Дахин оролдоно уу."
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -95,21 +130,26 @@ function Footer() {
                   placeholder="Нэр"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  required
+                  disabled={isSubmitting}
+                  className="px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50"
                 />
                 <input
                   type="email"
                   placeholder="И-мэйл"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  required
+                  disabled={isSubmitting}
+                  className="px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50"
                 />
                 <input
                   type="tel"
                   placeholder="Утас"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  disabled={isSubmitting}
+                  className="px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm disabled:opacity-50"
                 />
               </div>
 
@@ -120,14 +160,21 @@ function Footer() {
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   rows={8}
-                  className="w-full px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                  required
+                  disabled={isSubmitting}
+                  className="w-full px-4 py-3 bg-white/90 text-gray-800 placeholder-gray-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm disabled:opacity-50"
                 />
                 <button
                   type="submit"
-                  className="absolute bottom-4 right-4 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded transition-colors"
+                  disabled={isSubmitting}
+                  className="absolute bottom-4 right-4 bg-gray-800 hover:bg-gray-900 text-white p-3 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Send message"
                 >
-                  <Send className="w-5 h-5" />
+                  {isSubmitting ? (
+                    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </form>

@@ -1,67 +1,125 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { productCreateSchema, paginationSchema } from "@/lib/validations"
+import { errorResponse, successResponse, validateRequest, validateSearchParams } from "@/lib/api-utils"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    await requireAuth()
+
+    const { searchParams } = new URL(req.url)
     
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // Make pagination optional - if not provided, return all products
+    const hasPagination = searchParams.has('page') || searchParams.has('limit')
+    
+    if (hasPagination) {
+      const pagination = validateSearchParams(searchParams, paginationSchema)
 
-    const products = await prisma.product.findMany({
-      include: {
-        category: true
-      },
-      orderBy: {
-        createdAt: "desc"
+      if (!pagination.success) {
+        return pagination.response
       }
-    })
 
-    return NextResponse.json(products)
+      const { page, limit } = pagination.data
+      
+      // TypeScript guard - these should always be defined if pagination.success is true
+      if (typeof page !== 'number' || typeof limit !== 'number') {
+        return errorResponse(new Error("Invalid pagination parameters"), "Invalid pagination")
+      }
+      
+      const skip = (page - 1) * limit
+
+      const [products, total] = await Promise.all([
+        prisma.product.findMany({
+          include: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          skip,
+          take: limit,
+        }),
+        prisma.product.count(),
+      ])
+
+      return successResponse({
+        products,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      })
+    } else {
+      // No pagination - return all products as array
+      const products = await prisma.product.findMany({
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
+
+      return successResponse(products)
+    }
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to fetch products")
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    await requireAuth()
+
+    const validation = await validateRequest(req, productCreateSchema)
+    if (!validation.success) {
+      // Log validation errors in development
+      if (process.env.NODE_ENV === 'development' && validation.error) {
+        console.error('Product creation validation failed:', validation.error)
+      }
+      return validation.response
     }
 
-    const body = await req.json()
-    const { code, name, description, image, brandLogo, brandName, categoryId, featured } = body
-
-    if (!code || !name || !categoryId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      )
+    // Convert empty strings to null for image and brandLogo
+    const data = {
+      ...validation.data,
+      image: validation.data.image === '' ? null : validation.data.image,
+      brandLogo: validation.data.brandLogo === '' ? null : validation.data.brandLogo,
+      brandName: validation.data.brandName === '' ? null : validation.data.brandName,
     }
 
     const product = await prisma.product.create({
-      data: {
-        code,
-        name,
-        description: description || null,
-        image: image || null,
-        brandLogo: brandLogo || null,
-        brandName: brandName || null,
-        categoryId,
-        featured: featured || false
-      }
+      data,
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     })
 
-    return NextResponse.json(product, { status: 201 })
+    return successResponse(product, 201)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    // Log errors in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Product creation error:', error)
+    }
+    return errorResponse(error, "Failed to create product")
   }
 }
 

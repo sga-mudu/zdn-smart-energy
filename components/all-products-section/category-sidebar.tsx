@@ -35,7 +35,12 @@ export function CategorySidebar() {
                 const parentCategories = data.filter((cat: Category) => !cat.parentId)
                 setCategories(parentCategories)
             } else {
-                console.error("Failed to fetch categories")
+                const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+                console.error("Failed to fetch categories:", {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorData
+                })
             }
         } catch (error) {
             console.error("Error fetching categories:", error)

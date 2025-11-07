@@ -1,69 +1,58 @@
-import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { categoryCreateSchema } from "@/lib/validations"
+import { errorResponse, successResponse, validateRequest } from "@/lib/api-utils"
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
     const categories = await prisma.category.findMany({
       include: {
         parent: {
           select: {
             id: true,
-            name: true
-          }
-        }
+            name: true,
+          },
+        },
       },
       orderBy: [
         { parentId: "asc" },
-        { createdAt: "desc" }
-      ]
+        { createdAt: "desc" },
+      ],
     })
 
-    return NextResponse.json(categories)
+    return successResponse(categories)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to fetch categories")
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
-    const body = await req.json()
-    const { name, description, image, parentId } = body
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Category name is required" },
-        { status: 400 }
-      )
+    const validation = await validateRequest(req, categoryCreateSchema)
+    if (!validation.success) {
+      return validation.response
     }
 
     const category = await prisma.category.create({
-      data: {
-        name,
-        description,
-        image,
-        parentId
-      }
+      data: validation.data,
+      include: {
+        parent: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     })
 
-    return NextResponse.json(category, { status: 201 })
+    return successResponse(category, 201)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to create category")
   }
 }
 

@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { newsCreateSchema } from "@/lib/validations"
+import { errorResponse, successResponse, validateRequest } from "@/lib/api-utils"
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
     const news = await prisma.news.findMany({
       orderBy: {
@@ -17,46 +14,43 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(news)
+    return successResponse(news)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to fetch news")
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    await requireAuth()
+
+    const validation = await validateRequest(req, newsCreateSchema)
+    if (!validation.success) {
+      // Log validation errors in development
+      if (process.env.NODE_ENV === 'development' && validation.error) {
+        console.error('News creation validation failed:', validation.error)
+      }
+      return validation.response
     }
 
-    const body = await req.json()
-    const { title, content, image, excerpt, published } = body
-
-    if (!title || !content) {
-      return NextResponse.json(
-        { error: "Title and content are required" },
-        { status: 400 }
-      )
+    const data = {
+      ...validation.data,
+      image: validation.data.image === '' ? null : validation.data.image,
+      excerpt: validation.data.excerpt === '' ? null : validation.data.excerpt,
+      publishedAt: validation.data.published ? new Date() : null
     }
 
     const news = await prisma.news.create({
-      data: {
-        title,
-        content,
-        image,
-        excerpt,
-        published: published || false,
-        publishedAt: published ? new Date() : null
-      }
+      data
     })
 
-    return NextResponse.json(news, { status: 201 })
+    return successResponse(news, 201)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    // Log errors in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('News creation error:', error)
+    }
+    return errorResponse(error, "Failed to create news")
   }
 }
 

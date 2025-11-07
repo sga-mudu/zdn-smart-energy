@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Upload } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "sonner"
+import Image from "next/image"
 
 export default function NewNews() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -20,6 +23,51 @@ export default function NewNews() {
     excerpt: "",
     published: false,
   })
+
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("type", "news")
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || "Upload failed"
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      if (!data.url) {
+        throw new Error("No URL returned from upload")
+      }
+      return data.url
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to upload image"
+      toast.error(`Upload error: ${message}`)
+      throw error
+    }
+  }
+
+  const handleNewsImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const url = await handleImageUpload(file)
+      setFormData((prev) => ({ ...prev, image: url }))
+      toast.success("Image uploaded successfully")
+    } catch (error) {
+      // Error already handled
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,15 +80,18 @@ export default function NewNews() {
         body: JSON.stringify(formData),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
+        toast.success("News article created successfully")
         router.push("/admin/dashboard")
       } else {
-        alert("Failed to create news article")
+        toast.error(data.error || "Failed to create news article")
         setLoading(false)
       }
     } catch (error) {
       console.error(error)
-      alert("An error occurred")
+      toast.error("An error occurred while creating the news article")
       setLoading(false)
     }
   }
@@ -101,15 +152,41 @@ export default function NewNews() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  disabled={loading}
-                  placeholder="/news-image.jpg"
-                />
+                <Label htmlFor="image">Image</Label>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleNewsImageUpload}
+                      disabled={loading || uploadingImage}
+                      className="cursor-pointer"
+                    />
+                    {uploadingImage && <p className="text-xs text-muted-foreground">Uploading...</p>}
+                  </div>
+                  {formData.image && (
+                    <div className="relative w-full h-48 border rounded-lg overflow-hidden">
+                      <Image
+                        src={formData.image}
+                        alt="News preview"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="text-sm text-muted-foreground">
+                    Or enter image URL manually:
+                  </div>
+                  <Input
+                    id="image"
+                    type="text"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    disabled={loading || uploadingImage}
+                    placeholder="/uploads/news/image.jpg or https://example.com/image.jpg"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center space-x-2">

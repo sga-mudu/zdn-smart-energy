@@ -28,7 +28,7 @@ export default function Header() {
           <Link href="/all-products" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
             БҮТЭЭГДЭХҮҮН
           </Link>
-          <Link href="#about" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
+          <Link href="/news" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
             МЭДЭЭЛЭЛ
           </Link>
           <Link href="#contact" className="text-sm text-foreground transition-transform duration-300 hover:scale-115">
@@ -52,7 +52,7 @@ export default function Header() {
               БҮТЭЭГДЭХҮҮН
             </Link>
             <Link
-              href="#about"
+              href="/news"
               className="text-sm text-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >

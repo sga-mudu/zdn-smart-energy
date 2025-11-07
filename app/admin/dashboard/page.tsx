@@ -17,6 +17,7 @@ import {
   Edit,
   Trash2
 } from "lucide-react"
+import { toast } from "sonner"
 
 interface Category {
   id: string
@@ -61,6 +62,16 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
+  const [news, setNews] = useState<Array<{
+    id: string
+    title: string
+    content: string
+    image: string | null
+    excerpt: string | null
+    published: boolean
+    publishedAt: string | null
+    createdAt: string
+  }>>([])
   const [loading, setLoading] = useState(false)
 
   const handleSignOut = async () => {
@@ -74,6 +85,8 @@ export default function AdminDashboard() {
       fetchProducts()
     } else if (activeTab === "brands") {
       fetchBrands()
+    } else if (activeTab === "news") {
+      fetchNews()
     }
   }, [activeTab])
 
@@ -98,10 +111,19 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/products")
       if (response.ok) {
         const data = await response.json()
-        setProducts(data)
+        // Handle both array and paginated response formats
+        if (Array.isArray(data)) {
+          setProducts(data)
+        } else if (data && Array.isArray(data.products)) {
+          setProducts(data.products)
+        } else {
+          console.error("Invalid products data format:", data)
+          setProducts([])
+        }
       }
     } catch (error) {
       console.error("Error fetching products:", error)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -119,13 +141,13 @@ export default function AdminDashboard() {
       console.log("Delete response:", response.status, data)
       
       if (response.ok) {
+        toast.success("Category deleted successfully")
         fetchCategories()
       } else {
-        alert(data.error || "Failed to delete category")
+        toast.error(data.error || "Failed to delete category")
       }
     } catch (error) {
-      console.error("Error deleting category:", error)
-      alert("An error occurred while deleting the category")
+      toast.error("An error occurred while deleting the category")
     }
   }
 
@@ -141,13 +163,13 @@ export default function AdminDashboard() {
       console.log("Delete response:", response.status, data)
       
       if (response.ok) {
+        toast.success("Product deleted successfully")
         fetchProducts()
       } else {
-        alert(data.error || "Failed to delete product")
+        toast.error(data.error || "Failed to delete product")
       }
     } catch (error) {
-      console.error("Error deleting product:", error)
-      alert("An error occurred while deleting the product")
+      toast.error("An error occurred while deleting the product")
     }
   }
 
@@ -166,6 +188,32 @@ export default function AdminDashboard() {
     }
   }
 
+  const fetchNews = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/admin/news")
+      if (response.ok) {
+        const data = await response.json()
+        // Handle both array and response object formats
+        if (Array.isArray(data)) {
+          setNews(data)
+        } else if (data && Array.isArray(data.news)) {
+          setNews(data.news)
+        } else if (data && Array.isArray(data.data)) {
+          setNews(data.data)
+        } else {
+          console.error("Invalid news data:", data)
+          setNews([])
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching news:", error)
+      setNews([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDeleteBrand = async (id: string) => {
     if (!confirm("Are you sure you want to delete this brand?")) return
     
@@ -178,13 +226,33 @@ export default function AdminDashboard() {
       console.log("Delete response:", response.status, data)
       
       if (response.ok) {
+        toast.success("Brand deleted successfully")
         fetchBrands()
       } else {
-        alert(data.error || "Failed to delete brand")
+        toast.error(data.error || "Failed to delete brand")
       }
     } catch (error) {
-      console.error("Error deleting brand:", error)
-      alert("An error occurred while deleting the brand")
+      toast.error("An error occurred while deleting the brand")
+    }
+  }
+
+  const handleDeleteNews = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this news article?")) return
+    
+    try {
+      const response = await fetch(`/api/admin/news/${id}`, {
+        method: "DELETE",
+      })
+      const data = await response.json()
+      
+      if (response.ok) {
+        toast.success("News article deleted successfully")
+        fetchNews()
+      } else {
+        toast.error(data.error || "Failed to delete news article")
+      }
+    } catch (error) {
+      toast.error("An error occurred while deleting the news article")
     }
   }
 
@@ -415,7 +483,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map((product) => (
+                      {Array.isArray(products) && products.map((product) => (
                         <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="py-3 px-4">
                             {product.image ? (
@@ -588,14 +656,108 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === "news" && (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-              <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                News Management Coming Soon
-              </h3>
-              <p className="text-gray-500">
-                Add, edit, and delete news from this interface
-              </p>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">News Articles</h2>
+                <Button onClick={() => router.push("/admin/news/new")}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add News
+                </Button>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Loading news...</p>
+                </div>
+              ) : news.length === 0 ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+                  <Newspaper className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                    No news articles yet
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    Create your first news article to get started
+                  </p>
+                  <Button onClick={() => router.push("/admin/news/new")}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create News Article
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Image</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Title</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Excerpt</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">Published</th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-700">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(news) && news.map((article) => (
+                        <tr key={article.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            {article.image ? (
+                              <Image
+                                src={article.image}
+                                alt={article.title}
+                                width={50}
+                                height={50}
+                                className="rounded object-cover"
+                              />
+                            ) : (
+                              <div className="w-[50px] h-[50px] bg-gray-200 rounded flex items-center justify-center">
+                                <Newspaper className="w-6 h-6 text-gray-400" />
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 font-medium text-gray-900">{article.title}</td>
+                          <td className="py-3 px-4 text-gray-600 text-sm line-clamp-2">
+                            {article.excerpt || article.content.substring(0, 100) + "..."}
+                          </td>
+                          <td className="py-3 px-4">
+                            {article.published ? (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
+                                Published
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">
+                                Draft
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-gray-600 text-sm">
+                            {article.publishedAt 
+                              ? new Date(article.publishedAt).toLocaleDateString()
+                              : "—"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/admin/news/${article.id}/edit`)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteNews(article.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           )}
         </div>

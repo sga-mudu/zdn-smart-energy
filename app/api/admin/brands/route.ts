@@ -1,61 +1,85 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { brandCreateSchema, paginationSchema } from "@/lib/validations"
+import { errorResponse, successResponse, validateRequest, validateSearchParams } from "@/lib/api-utils"
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    await requireAuth()
+
+    const { searchParams } = new URL(req.url)
     
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // Make pagination optional - if not provided, return all brands
+    const hasPagination = searchParams.has('page') || searchParams.has('limit')
+    
+    if (hasPagination) {
+      const pagination = validateSearchParams(searchParams, paginationSchema)
 
-    const brands = await prisma.brand.findMany({
-      orderBy: {
-        createdAt: "desc"
+      if (!pagination.success) {
+        return pagination.response
       }
-    })
 
-    return NextResponse.json(brands)
+      const { page, limit } = pagination.data
+      
+      // TypeScript guard
+      if (typeof page !== 'number' || typeof limit !== 'number') {
+        return errorResponse(new Error("Invalid pagination parameters"), "Invalid pagination")
+      }
+      
+      const skip = (page - 1) * limit
+
+      const [brands, total] = await Promise.all([
+        prisma.brand.findMany({
+          orderBy: {
+            createdAt: "desc",
+          },
+          skip,
+          take: limit,
+        }),
+        prisma.brand.count(),
+      ])
+
+      return successResponse({
+        brands,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      })
+    } else {
+      // No pagination - return all brands as array
+      const brands = await prisma.brand.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+      })
+
+      return successResponse(brands)
+    }
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to fetch brands")
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
-    const body = await req.json()
-    const { name, logo, description, website, featured } = body
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Brand name is required" },
-        { status: 400 }
-      )
+    const validation = await validateRequest(req, brandCreateSchema)
+    if (!validation.success) {
+      return validation.response
     }
 
     const brand = await prisma.brand.create({
-      data: {
-        name,
-        logo: logo || null,
-        description: description || null,
-        website: website || null,
-        featured: featured || false
-      }
+      data: validation.data,
     })
 
-    return NextResponse.json(brand, { status: 201 })
+    return successResponse(brand, 201)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to create brand")
   }
 }
 

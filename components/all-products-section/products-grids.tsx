@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { ProductCard } from "./products-cards"
 import jsPDF from "jspdf"
 
@@ -11,6 +12,11 @@ interface Product {
     image: string | null
     brandLogo: string | null
     brandName: string | null
+    categoryId: string
+    category?: {
+        id: string
+        name: string
+    }
 }
 
 interface ProductGridProps {
@@ -18,22 +24,37 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ selectedBrand }: ProductGridProps) {
+    const searchParams = useSearchParams()
+    const selectedCategoryId = searchParams.get('category')
+    
     const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
 
     useEffect(() => {
+        // Build API URL with category filter if provided
+        let apiUrl = "/api/products"
+        if (selectedCategoryId) {
+            apiUrl += `?categoryId=${selectedCategoryId}`
+        }
+        
         // Fetch products from database
-        fetch("/api/products")
-            .then((res) => {
+        fetch(apiUrl)
+            .then(async (res) => {
                 if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`)
+                    const errorData = await res.json().catch(() => ({}))
+                    const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${res.status}`
+                    throw new Error(errorMessage)
                 }
                 return res.json()
             })
             .then((data) => {
-                // Ensure data is an array
-                if (Array.isArray(data)) {
+                // Handle paginated response structure
+                if (data && data.products && Array.isArray(data.products)) {
+                    // Paginated response: { products: [], pagination: {} }
+                    setProducts(data.products)
+                } else if (Array.isArray(data)) {
+                    // Direct array response
                     setProducts(data)
                 } else {
                     console.error("Invalid products data:", data)
@@ -46,7 +67,7 @@ export function ProductGrid({ selectedBrand }: ProductGridProps) {
                 setProducts([])
                 setLoading(false)
             })
-    }, [])
+    }, [selectedCategoryId])
 
     // Filter products based on selected brand
     const filteredProducts = useMemo(() => {
@@ -55,9 +76,32 @@ export function ProductGrid({ selectedBrand }: ProductGridProps) {
             return []
         }
         
-        if (!selectedBrand) return products
+        let filtered = products
         
-        return products.filter(product => product.brandName === selectedBrand)
+        // Filter by brand if selected
+        if (selectedBrand) {
+            // Debug in development
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Filtering products by brand:', {
+                    selectedBrand,
+                    totalProducts: products.length,
+                    productsWithBrand: products.filter(p => p.brandName).length,
+                    uniqueBrands: [...new Set(products.map(p => p.brandName).filter(Boolean))]
+                })
+            }
+            
+            filtered = filtered.filter(product => {
+                // Match brand name exactly (case-sensitive)
+                const matches = product.brandName === selectedBrand
+                return matches
+            })
+            
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Filtered products count:', filtered.length)
+            }
+        }
+        
+        return filtered
     }, [selectedBrand, products])
     const toggleProductSelection = (productId: string) => {
         setSelectedProducts((prev) => {
@@ -142,11 +186,6 @@ export function ProductGrid({ selectedBrand }: ProductGridProps) {
             <div className="text-center mb-4 lg:mb-6 rounded-lg bg-gray-700 py-3 px-4 lg:pl-6 text-sm lg:text-md text-white">
                 <h3>Бүтээгдэхүүний баруун доод булан дээр даран бүтээгдэхүүний танилцуулгыг татах боломжтой.</h3>
             </div>
-            <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg lg:text-2xl font-semibold text-gray-600">
-                    Эрэмбэ хүчний хэмжээ, хэмжилт төхөөрөмж
-                </h2>
-            </div>
             {loading ? (
                 <div className="py-12 text-center">
                     <p className="text-lg text-muted-foreground">Бүтээгдэхүүн ачаалж байна...</p>
@@ -176,7 +215,11 @@ export function ProductGrid({ selectedBrand }: ProductGridProps) {
             ) : (
                 <div className="py-12 text-center">
                     <p className="text-lg text-muted-foreground">
-                        Энэ брэндийн бүтээгдэхүүн байхгүй байна.
+                        {selectedCategoryId 
+                            ? "Энэ категорийн бүтээгдэхүүн байхгүй байна."
+                            : selectedBrand 
+                            ? "Энэ брэндийн бүтээгдэхүүн байхгүй байна."
+                            : "Бүтээгдэхүүн олдсонгүй."}
                     </p>
                 </div>
             )}

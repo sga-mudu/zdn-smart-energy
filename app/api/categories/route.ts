@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { errorResponse, successResponse } from "@/lib/api-utils"
 
 export async function GET() {
   try {
@@ -8,37 +8,29 @@ export async function GET() {
         parent: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         children: {
           select: {
             id: true,
             name: true,
             description: true,
-            parentId: true
+            parentId: true,
           },
           orderBy: {
-            createdAt: "desc"
-          }
-        }
+            createdAt: "desc",
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
-      }
+        createdAt: "desc",
+      },
     })
 
-    return NextResponse.json(categories)
+    return successResponse(categories)
   } catch (error) {
-    console.error("Error fetching categories:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json(
-      { 
-        error: "Internal server error",
-        message: errorMessage 
-      },
-      { status: 500 }
-    )
+    return errorResponse(error, "Failed to fetch categories")
   }
 }
 
