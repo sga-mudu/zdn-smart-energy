@@ -12,9 +12,6 @@
     "test:db": "node scripts/test-db-connection.js",
     "kill:connections": "node scripts/kill-old-connections.js"
   },
-  "prisma": {
-    "seed": "node prisma/seed.js"
-  },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^6.18.0",
