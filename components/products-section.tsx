@@ -1,11 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useEffect, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { ChevronRight } from "lucide-react"
+import { z } from "zod"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import Link from "next/link"
-import Image from "next/image"
+import {
+  Carousel,
+  CarouselApi,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 
 interface Product {
   id: string
@@ -17,75 +27,75 @@ interface Product {
   brandName: string | null
 }
 
+const productSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional().default(null),
+  image: z.string().nullable().optional().default(null),
+  brandLogo: z.string().nullable().optional().default(null),
+  brandName: z.string().nullable().optional().default(null),
+})
+
+const featuredProductsResponseSchema = z.union([
+  z.array(productSchema),
+  z.object({
+    products: z.array(productSchema),
+  }),
+])
+
+async function fetchFeaturedProducts(): Promise<Product[]> {
+  try {
+    const response = await fetch("/api/products?featured=true")
+    if (!response.ok) {
+      const errorPayload = await response.json().catch(() => null)
+      console.error("Failed to fetch featured products:", errorPayload)
+      return []
+    }
+
+    const payload = await response.json()
+    const parsed = featuredProductsResponseSchema.safeParse(payload)
+
+    if (!parsed.success) {
+      console.error("Unexpected featured products payload:", parsed.error.flatten())
+      return []
+    }
+
+    const data = parsed.data
+    return Array.isArray(data) ? data : data.products
+  } catch (error) {
+    console.error("Error fetching featured products:", error)
+    return []
+  }
+}
+
 export default function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [startIndex, setStartIndex] = useState(0)
-  const [visibleProducts, setVisibleProducts] = useState(4)
+  const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null)
 
   useEffect(() => {
-    // Fetch featured products from API
-    fetch("/api/products?featured=true")
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}))
-          console.error("Failed to fetch featured products:", errorData)
-          return []
-        }
-        return res.json()
-      })
-      .then((data) => {
-        // Handle both array and paginated response
-        const productsList = Array.isArray(data) ? data : (data.products || [])
-        setProducts(productsList)
-        setLoading(false)
-      })
-      .catch((error) => {
-        console.error("Error fetching featured products:", error)
-        setProducts([])
-        setLoading(false)
-      })
+    void (async () => {
+      const featuredProducts = await fetchFeaturedProducts()
+      setProducts(featuredProducts)
+      setLoading(false)
+    })()
   }, [])
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 640) {
-        setVisibleProducts(1)
-      } else if (window.innerWidth < 1024) {
-        setVisibleProducts(2)
-      } else {
-        setVisibleProducts(4)
-      }
-    }
+    if (!carouselApi || products.length === 0) return
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
-  useEffect(() => {
-    if (products.length === 0) return
-    
     const timer = setInterval(() => {
-      setStartIndex((prev) => {
-        const nextIndex = prev + 1
-        if (nextIndex >= products.length - visibleProducts + 1) {
-          return 0
-        }
-        return nextIndex
-      })
-    }, 2000)
+      if (!carouselApi) return
+      if (carouselApi.canScrollNext()) {
+        carouselApi.scrollNext()
+      } else {
+        carouselApi.scrollTo(0)
+      }
+    }, 4000)
 
     return () => clearInterval(timer)
-  }, [visibleProducts, products.length])
-
-  const handlePrev = () => {
-    setStartIndex((prev) => Math.max(0, prev - 1))
-  }
-
-  const handleNext = () => {
-    setStartIndex((prev) => Math.min(products.length - visibleProducts, prev + 1))
-  }
+  }, [carouselApi, products.length])
 
   if (loading) {
     return (
@@ -112,10 +122,7 @@ export default function ProductsSection() {
     )
   }
 
-  if (products.length === 0) {
-    // Don't show the section if there are no featured products
-    return null
-  }
+  if (products.length === 0) return null
 
   return (
     <section className="py-8 sm:py-12 md:py-16 bg-background" id="products">
@@ -134,65 +141,59 @@ export default function ProductsSection() {
           </Link>
         </div>
 
-        <div className="relative bg-secondary rounded-lg border border-border p-2 shadow-md">
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-3 md:-translate-x-4 z-10 rounded-full bg-white shadow-lg w-9 h-9 md:w-10 md:h-10"
-            onClick={handlePrev}
-            disabled={startIndex === 0 || products.length <= visibleProducts}
-          >
-            <ChevronLeft className="w-5 h-5 md:w-5 md:h-5" />
-          </Button>
-
-          <div className="overflow-hidden">
-            <div
-              className="flex gap-2 sm:gap-3 md:gap-4 transition-transform duration-300"
-              style={{ transform: `translateX(-${startIndex * (100 / visibleProducts)}%)` }}
-            >
-              {products.map((product) => (
-                <Link key={product.id} href={`/products/${product.id}`}>
-                  <Card className="flex-shrink-0 w-full sm:w-[calc(50%-6px)] lg:w-[calc(25%-12px)] min-w-[180px] sm:min-w-[200px] cursor-pointer hover:shadow-lg transition-shadow">
-                    <CardContent className="p-3 flex flex-col h-full sm:p-4 md:p-6">
-                      <div className="aspect-square mb-2 sm:mb-3 md:mb-4 flex items-center justify-center bg-muted/30 rounded">
+        <Carousel
+          opts={{ align: "start", loop: products.length > 1 }}
+          setApi={setCarouselApi}
+          className="group relative rounded-lg border border-border bg-secondary p-2 shadow-md"
+        >
+          <CarouselContent className="gap-2 sm:gap-3 md:gap-4">
+            {products.map((product) => (
+              <CarouselItem
+                key={product.id}
+                className="basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+              >
+                <Link href={`/products/${product.id}`} className="block h-full">
+                  <Card className="h-full cursor-pointer transition-shadow hover:shadow-lg">
+                    <CardContent className="flex h-full flex-col p-3 sm:p-4 md:p-6">
+                      <div className="mb-3 flex aspect-square items-center justify-center rounded bg-muted/30 sm:mb-4">
                         <Image
                           src={product.image || "/placeholder.svg"}
                           alt={product.name}
                           width={200}
                           height={200}
-                          className="w-full h-full object-contain p-2 sm:p-3 md:p-4"
+                          className="h-full w-full object-contain p-3 md:p-4"
                         />
                       </div>
-                      <h3 className="font-semibold text-sm md:text-base text-foreground mb-1">{product.code}</h3>
-                      <p className="text-xs text-muted-foreground mb-2 md:mb-3 line-clamp-2">{product.description || product.name}</p>
-                      {product.brandLogo && (
-                        <div className="flex items-center mt-auto pt-2">
+                      <h3 className="mb-1 text-sm font-semibold text-foreground md:text-base">
+                        {product.code}
+                      </h3>
+                      <p className="mb-2 text-xs text-muted-foreground line-clamp-2 md:mb-3">
+                        {product.description ?? product.name}
+                      </p>
+                      {product.brandLogo ? (
+                        <div className="mt-auto flex items-center pt-2">
                           <Image
                             src={product.brandLogo}
                             alt={product.brandName || "Brand"}
-                            width={80}
+                            width={96}
                             height={32}
                             className="h-6 md:h-8 object-contain"
                           />
                         </div>
-                      )}
+                      ) : null}
                     </CardContent>
                   </Card>
                 </Link>
-              ))}
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-3 md:translate-x-4 z-10 rounded-full bg-white shadow-lg w-9 h-9 md:w-10 md:h-10"
-            onClick={handleNext}
-            disabled={startIndex >= products.length - visibleProducts || products.length <= visibleProducts}
-          >
-            <ChevronRight className="w-5 h-5 md:w-5 md:h-5" />
-          </Button>
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {products.length > 1 ? (
+            <>
+              <CarouselPrevious className="hidden sm:flex !left-3 sm:!left-4 md:!left-5 bg-white text-foreground shadow-lg transition-colors hover:bg-white/90" />
+              <CarouselNext className="hidden sm:flex !right-3 sm:!right-4 md:!right-5 bg-white text-foreground shadow-lg transition-colors hover:bg-white/90" />
+            </>
+          ) : null}
+        </Carousel>
       </div>
     </section>
   )

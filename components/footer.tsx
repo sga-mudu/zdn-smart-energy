@@ -183,7 +183,7 @@ function Footer() {
 
         {/* Copyright */}
         <div className="mt-12 pt-8 border-t border-white/20 text-center">
-          <p className="text-xs md:text-sm">© COPYRIGHT 2021 ZDN SMART ENERGY LLC. ALL RIGHTS RESERVED.</p>
+          <p className="text-xs md:text-sm">© COPYRIGHT 2025 ZDN SMART ENERGY LLC. ALL RIGHTS RESERVED.</p>
         </div>
       </div>
     </footer>
