@@ -206,6 +206,9 @@ export function BrandSection({ onBrandSelect, selectedBrand }: BrandSectionProps
                                     width={itemsToShow === 2 ? 64 : 96}
                                     height={itemsToShow === 2 ? 48 : 64}
                                     className="object-contain"
+                                    sizes="(max-width: 640px) 96px, 64px"
+                                    quality={90}
+                                    loading="lazy"
                                 />
                             </div>
                             <div className="flex flex-col mx-auto gap-3 items-center justify-between min-w-0">
@@ -263,6 +266,9 @@ export function BrandSection({ onBrandSelect, selectedBrand }: BrandSectionProps
                                 width={100}
                                 height={60}
                                 className="object-contain"
+                                sizes="100px"
+                                quality={90}
+                                loading="lazy"
                             />
                         </div>
                         <div className="grid gap-3 items-center">

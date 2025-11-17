@@ -96,6 +96,9 @@ export function NewsDetail() {
               alt={article.title}
               fill
               className="object-cover"
+              sizes="(max-width: 768px) 100vw, 896px"
+              quality={90}
+              priority
             />
           </div>
         )}

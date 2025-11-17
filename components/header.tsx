@@ -19,6 +19,8 @@ export default function Header() {
             width={120}
             height={50}
             className="h-10 md:h-15 w-auto transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 120px, 150px"
+            quality={90}
             priority
           />
         </Link>

@@ -6,53 +6,110 @@ import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-const slides = [
-  {
-    image: "/wind-turbines-blue-sky.jpg",
-    title: "САЛХИНЫ ЭРЧИМ ХҮЧ",
-    description:
-      "Дэлхийн тэргүүн дээр явагч цацраг хэмх үүс хэмжээгээр тусгайн үйлдвэр-тавилгын үүрэн эрчим хүчний үүлдвэр хэмжээгээр шилжих үзэгдэл болсон бөгөөд үүнийг үүх тавилгын салхи тэж нээлттэй.",
-    link: "/all-products",
-  },
-  {
-    image: "/renewable-energy-solar-panels.jpg",
-    title: "НАРНЫ ЭРЧИМ ХҮЧ",
-    description:
-      "Нарны эрчим хүчний технологи нь байгаль орчинд ээлтэй, цэвэр эрчим хүчний эх үүсвэр бөгөөд ирээдүйн эрчим хүчний шийдэл юм.",
-    link: "/all-products",
-  },
-  {
-    image: "/green-energy-technology.jpg",
-    title: "НОГООН ТЕХНОЛОГИ",
-    description: "Дэвшилтэт ногоон технологи ашиглан байгаль орчныг хамгаалж, тогтвортой хөгжлийг дэмжиж байна.",
-    link: "/all-products",
-  },
-]
+interface NewsArticle {
+  id: string
+  title: string
+  content: string
+  excerpt: string | null
+  image: string | null
+  published: boolean
+  publishedAt: string | null
+  createdAt: string
+}
 
 export default function WindEnergySection() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
+  const [news, setNews] = useState<NewsArticle[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch last 5 news articles
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await fetch("/api/news?published=true")
+        if (response.ok) {
+          const data = await response.json()
+          // Handle both array and response object formats
+          let newsData: NewsArticle[] = []
+          if (Array.isArray(data)) {
+            newsData = data
+          } else if (data && Array.isArray(data.news)) {
+            newsData = data.news
+          } else if (data && Array.isArray(data.data)) {
+            newsData = data.data
+          }
+          // Get last 5 news articles
+          setNews(newsData.slice(0, 5))
+        }
+      } catch (error) {
+        console.error("Error fetching news:", error)
+        setNews([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNews()
+  }, [])
+
+  // Convert news to slides format
+  const slides = news.map((article) => ({
+    id: article.id,
+    image: article.image || "/wind-turbines-blue-sky.jpg",
+    title: article.title,
+    description: article.excerpt || article.content.substring(0, 200) + "...",
+    link: `/news/${article.id}`,
+  }))
+
+  // Reset current slide when news changes
+  useEffect(() => {
+    if (slides.length > 0 && currentSlide >= slides.length) {
+      setCurrentSlide(0)
+    }
+  }, [slides.length, currentSlide])
 
   // Auto-rotate every 5 seconds
   useEffect(() => {
-    if (isPaused) return
+    if (isPaused || slides.length === 0) return
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length)
     }, 5000)
 
     return () => clearInterval(timer)
-  }, [isPaused])
+  }, [isPaused, slides.length])
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index)
+    if (slides.length > 0) {
+      setCurrentSlide(index)
+    }
   }
 
   const goToPrevious = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+    if (slides.length > 0) {
+      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
+    }
   }
 
   const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length)
+    if (slides.length > 0) {
+      setCurrentSlide((prev) => (prev + 1) % slides.length)
+    }
+  }
+
+  // Don't render if loading or no news
+  if (loading) {
+    return (
+      <section className="relative h-[400px] sm:h-[450px] md:h-[550px] lg:h-[650px] xl:h-[750px] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500 text-lg">Loading news...</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (slides.length === 0) {
+    return null
   }
 
   return (
@@ -63,7 +120,7 @@ export default function WindEnergySection() {
     >
       {slides.map((slide, index) => (
         <div
-          key={index}
+          key={slide.id || index}
           className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
             index === currentSlide ? "opacity-100 scale-100" : "opacity-0 scale-105"
           }`}
@@ -74,7 +131,9 @@ export default function WindEnergySection() {
             fill
             className="object-cover"
             priority={index === 0}
-            sizes="100vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1920px"
+            quality={index === 0 ? 90 : 85}
+            loading={index === 0 ? "eager" : "lazy"}
           />
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/40" />
@@ -88,7 +147,7 @@ export default function WindEnergySection() {
           <div className="max-w-2xl ml-auto text-right">
             {slides.map((slide, index) => (
               <div
-                key={index}
+                key={slide.id || index}
                 className={`transition-all duration-700 ease-out ${
                   index === currentSlide
                     ? "opacity-100 translate-y-0 translate-x-0"

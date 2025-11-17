@@ -172,6 +172,9 @@ export default function ProductsSection() {
                           width={300}
                           height={300}
                           className="h-full w-full object-contain p-4 md:p-6 transition-transform duration-300 group-hover/card:scale-110"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          quality={85}
+                          loading="lazy"
                         />
                       </div>
                       
@@ -185,8 +188,8 @@ export default function ProductsSection() {
                         </p>
                         
                         {/* Brand Logo */}
-                        {product.brandLogo ? (
-                          <div className="mt-auto flex items-center pt-3 border-t border-gray-100">
+                        <div className="mt-auto flex items-center pt-3 border-t border-gray-100 min-h-[2rem]">
+                          {product.brandLogo ? (
                             <Image
                               src={product.brandLogo}
                               alt={product.brandName || "Brand"}
@@ -194,8 +197,10 @@ export default function ProductsSection() {
                               height={40}
                               className="h-6 md:h-8 object-contain opacity-70 group-hover/card:opacity-100 transition-opacity"
                             />
-                          </div>
-                        ) : null}
+                          ) : (
+                            <div className="h-6 md:h-8" aria-hidden="true" />
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

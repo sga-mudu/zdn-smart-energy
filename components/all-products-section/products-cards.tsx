@@ -33,9 +33,12 @@ export function ProductCard({ product, isSelected = false, onSelect }: ProductCa
                         <Image
                             src={product.image || "/placeholder.svg"}
                             alt={product.name}
-                            width={120}
-                            height={120}
+                            width={192}
+                            height={192}
                             className="object-contain transition-transform group-hover:scale-105"
+                            sizes="(max-width: 640px) 128px, (max-width: 1024px) 160px, 192px"
+                            quality={85}
+                            loading="lazy"
                         />
                     </div>
                     <h3 className="mb-1 text-xs sm:text-sm lg:text-base font-bold text-foreground">
@@ -45,13 +48,22 @@ export function ProductCard({ product, isSelected = false, onSelect }: ProductCa
                         {product.name}
                     </p>
                     <div className="flex items-center justify-between">
-                        <Image
-                            src={product.brandLogo || "/placeholder.svg"}
-                            alt={product.brandName || "Brand"}
-                            width={50}
-                            height={25}
-                            className="object-contain"
-                        />
+                        <div className="h-6 w-12 flex items-center justify-start flex-shrink-0">
+                            {product.brandLogo ? (
+                                <Image
+                                    src={product.brandLogo}
+                                    alt={product.brandName || "Brand"}
+                                    width={50}
+                                    height={25}
+                                    className="object-contain"
+                                    sizes="50px"
+                                    quality={90}
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div className="w-full h-full" aria-hidden="true" />
+                            )}
+                        </div>
                         <div onClick={handleCheckboxClick}>
                             <Checkbox 
                                 checked={isSelected} 
