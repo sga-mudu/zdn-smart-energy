@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import type { CSSProperties } from "react"
 import Image from "next/image"
-import Marquee from "react-fast-marquee"
 
 interface Brand {
   id: string
@@ -66,8 +66,14 @@ export default function BrandsSection() {
 
   if (brands.length === 0) return null
 
+  const marqueeDurationSeconds = Math.max(20, brands.length * 3)
+  const marqueeStyle: CSSProperties = {
+    animationDuration: `${marqueeDurationSeconds}s`,
+  }
+  const marqueeItems = [...brands, ...brands]
+
   return (
-    <section className="py-8 sm:py-12 md:py-16 bg-gradient-to-b from-white via-gray-50/50 to-white relative overflow-hidden">
+    <section className="pt-8 sm:pt-10 md:pt-12 lg:pt-14 pb-4 sm:pb-6 md:pb-8 bg-gradient-to-b from-white via-gray-50/50 to-white relative overflow-hidden">
       <div className="container mx-auto px-4 md:px-6 max-w-7xl relative z-10">
         {/* Section Header */}
         <div className="text-center mb-6 sm:mb-8 md:mb-10">
@@ -78,47 +84,46 @@ export default function BrandsSection() {
         </div>
 
         {/* Marquee */}
-        <Marquee
-          gradient={true}
-          gradientColor="white"
-          gradientWidth={80}
-          speed={40}
-          pauseOnHover={true}
-          className="py-4"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}
-        >
-          {brands.map((brand) => (
-            <div
-              key={brand.id}
-              className="flex-shrink-0 flex items-center justify-center h-16 sm:h-20 md:h-24 px-2 sm:px-3 md:px-4 mx-2 sm:mx-3 md:mx-4 opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0"
-            >
-              {brand.logo && brand.logo.trim() !== "" ? (
-                <div className="relative w-[100px] sm:w-[120px] md:w-[140px] h-12 sm:h-16 md:h-20">
-                  <Image
-                    src={brand.logo}
-                    alt={brand.name || "Brand logo"}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, 140px"
-                    unoptimized={true}
-                    onError={(e) => {
-                      console.error("Image load error for brand:", brand.name, brand.logo)
-                      const target = e.currentTarget as HTMLImageElement
-                      const parent = target.parentElement
-                      if (parent) {
-                        parent.innerHTML = `<span class="text-xs sm:text-sm md:text-base font-semibold text-gray-500 whitespace-nowrap">${brand.name || "Brand"}</span>`
-                      }
-                    }}
-                  />
-                </div>
-              ) : (
-                <span className="text-xs sm:text-sm md:text-base font-semibold text-gray-500 whitespace-nowrap">
-                  {brand.name}
-                </span>
-              )}
-            </div>
+        <div className="relative py-2 sm:py-3 overflow-hidden">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-white via-white/80 to-transparent z-10" aria-hidden />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-16 bg-gradient-to-l from-white via-white/80 to-transparent z-10" aria-hidden />
+          <div
+            className="marquee-track flex items-center gap-4 sm:gap-6 md:gap-8"
+            style={marqueeStyle}
+          >
+            {marqueeItems.map((brand, index) => (
+              <div
+                key={`${brand.id}-${index}`}
+                className="flex-shrink-0 flex items-center justify-center h-16 sm:h-20 md:h-24 px-3 sm:px-4 md:px-5 opacity-70 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0"
+              >
+                {brand.logo && brand.logo.trim() !== "" ? (
+                  <div className="relative w-[100px] sm:w-[120px] md:w-[140px] h-12 sm:h-16 md:h-20">
+                    <Image
+                      src={brand.logo}
+                      alt={brand.name || "Brand logo"}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, 140px"
+                      unoptimized={true}
+                      onError={(e) => {
+                        console.error("Image load error for brand:", brand.name, brand.logo)
+                        const target = e.currentTarget as HTMLImageElement
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-xs sm:text-sm md:text-base font-semibold text-gray-500 whitespace-nowrap">${brand.name || "Brand"}</span>`
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <span className="text-xs sm:text-sm md:text-base font-semibold text-gray-500 whitespace-nowrap">
+                    {brand.name}
+                  </span>
+                )}
+              </div>
             ))}
-        </Marquee>
+          </div>
+        </div>
       </div>
     </section>
   )

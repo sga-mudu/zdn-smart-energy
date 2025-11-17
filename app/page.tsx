@@ -14,8 +14,8 @@ export default function Home() {
       <Header />
       <HeroSection />
       <ProductsSection />
-      <AboutSection />
       <BrandsSection />
+      <AboutSection />
       <WindEnergySection />
       <FeaturesSection />
       <Footer />

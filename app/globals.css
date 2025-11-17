@@ -148,6 +148,25 @@
   height: 0 !important;
 }
 
+/* Brands marquee animation */
+.marquee-track {
+  animation: brand-marquee linear infinite;
+  will-change: transform;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes brand-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 /* Floating animation for about section particles */
 @keyframes float {
   0%, 100% { 
