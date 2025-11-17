@@ -188,8 +188,8 @@ export default function ProductsSection() {
                         </p>
                         
                         {/* Brand Logo */}
-                        {product.brandLogo ? (
-                          <div className="mt-auto flex items-center pt-3 border-t border-gray-100">
+                        <div className="mt-auto flex items-center pt-3 border-t border-gray-100 min-h-[2rem]">
+                          {product.brandLogo ? (
                             <Image
                               src={product.brandLogo}
                               alt={product.brandName || "Brand"}
@@ -197,8 +197,10 @@ export default function ProductsSection() {
                               height={40}
                               className="h-6 md:h-8 object-contain opacity-70 group-hover/card:opacity-100 transition-opacity"
                             />
-                          </div>
-                        ) : null}
+                          ) : (
+                            <div className="h-6 md:h-8" aria-hidden="true" />
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

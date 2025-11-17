@@ -257,8 +257,8 @@ export default function ProductPage() {
                       <p className="text-xs text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
                         {relatedProduct.name}
                       </p>
-                      {relatedProduct.brandLogo && (
-                        <div className="pt-2 border-t border-gray-100">
+                      <div className="pt-2 border-t border-gray-100 min-h-[1.5rem]">
+                        {relatedProduct.brandLogo ? (
                           <Image
                             src={relatedProduct.brandLogo}
                             alt={relatedProduct.brandName || "Brand"}
@@ -266,8 +266,10 @@ export default function ProductPage() {
                             height={30}
                             className="h-5 object-contain opacity-70 group-hover:opacity-100 transition-opacity"
                           />
-                        </div>
-                      )}
+                        ) : (
+                          <div className="h-5" aria-hidden="true" />
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>

@@ -48,16 +48,22 @@ export function ProductCard({ product, isSelected = false, onSelect }: ProductCa
                         {product.name}
                     </p>
                     <div className="flex items-center justify-between">
-                        <Image
-                            src={product.brandLogo || "/placeholder.svg"}
-                            alt={product.brandName || "Brand"}
-                            width={50}
-                            height={25}
-                            className="object-contain"
-                            sizes="50px"
-                            quality={90}
-                            loading="lazy"
-                        />
+                        <div className="h-6 w-12 flex items-center justify-start flex-shrink-0">
+                            {product.brandLogo ? (
+                                <Image
+                                    src={product.brandLogo}
+                                    alt={product.brandName || "Brand"}
+                                    width={50}
+                                    height={25}
+                                    className="object-contain"
+                                    sizes="50px"
+                                    quality={90}
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div className="w-full h-full" aria-hidden="true" />
+                            )}
+                        </div>
                         <div onClick={handleCheckboxClick}>
                             <Checkbox 
                                 checked={isSelected} 
