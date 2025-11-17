@@ -12,21 +12,21 @@ export default function HeroSection() {
 
   const heroSlides = [
     {
-      image: "./brand-homepage-background1.jpg",
+      image: "/brand-homepage-background1.jpg",
       title: "ХЭМЖИЛТ, ХЯНАЛТЫН ТОНОГ ТӨХӨӨРӨМЖ",
       subtitle: "Дэлхийн тэргүүн чанартай хэмжилтийн техник хэрэгсэл",
       cta: "БҮТЭЭГДЭХҮҮН ҮЗЭХ",
       link: "/all-products"
     },
     {
-      image: "./brand-homepage-background2.jpg",
+      image: "/brand-homepage-background2.jpg",
       title: "ЦАХИЛГААН ЭРЧИМ ХҮЧНИЙ ШИЙДЛҮҮД",
       subtitle: "Тогтвортой, найдвартай эрчим хүчний системийн тоног төхөөрөмж",
       cta: "МЭДЛЭГ АВАХ",
       link: "/news"
     },
     {
-      image: "./brand-homepage-background3.jpg",
+      image: "/brand-homepage-background3.jpg",
       title: "ТОНОГ ТӨХӨӨРӨМЖИЙН ШИНЭЧЛЭЛ",
       subtitle: "Хамгийн сүүлийн үеийн технологиудын нэгдэл",
       cta: "ХОЛБОО БАРИХ",
@@ -78,7 +78,9 @@ export default function HeroSection() {
             fill
             className="object-cover"
             priority={index === 0}
-            sizes="100vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1920px"
+            quality={index === 0 ? 90 : 85}
+            loading={index === 0 ? "eager" : "lazy"}
           />
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />

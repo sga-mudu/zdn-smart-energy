@@ -100,7 +100,8 @@ export default function BrandsSection() {
                     fill
                     className="object-contain"
                     sizes="(max-width: 640px) 100px, (max-width: 768px) 120px, 140px"
-                    unoptimized={true}
+                    quality={90}
+                    loading="lazy"
                     onError={(e) => {
                       console.error("Image load error for brand:", brand.name, brand.logo)
                       const target = e.currentTarget as HTMLImageElement

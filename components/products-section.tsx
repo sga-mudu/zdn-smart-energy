@@ -172,6 +172,9 @@ export default function ProductsSection() {
                           width={300}
                           height={300}
                           className="h-full w-full object-contain p-4 md:p-6 transition-transform duration-300 group-hover/card:scale-110"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                          quality={85}
+                          loading="lazy"
                         />
                       </div>
                       
