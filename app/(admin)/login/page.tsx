@@ -30,7 +30,7 @@ export default function AdminLogin() {
       if (result?.error) {
         setError("Invalid email or password")
         setLoading(false)
-      } else {
+      } else { 
         router.push("/admin/dashboard")
       }
     } catch (err) {

@@ -123,3 +123,44 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide scrollbars for marquee components - keep overflow functionality */
+.marquee-container,
+[class*="marquee"],
+[class*="marquee"] *,
+[class*="Marquee"],
+[class*="Marquee"] *,
+[class*="rfm"] *,
+[class*="rfm-marquee"] * {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.marquee-container::-webkit-scrollbar,
+[class*="marquee"]::-webkit-scrollbar,
+[class*="Marquee"]::-webkit-scrollbar,
+[class*="marquee"] *::-webkit-scrollbar,
+[class*="Marquee"] *::-webkit-scrollbar,
+[class*="rfm"] *::-webkit-scrollbar,
+[class*="rfm-marquee"] *::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Floating animation for about section particles */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) translateX(0px); 
+  }
+  33% { 
+    transform: translateY(-20px) translateX(10px); 
+  }
+  66% { 
+    transform: translateY(10px) translateX(-10px); 
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}

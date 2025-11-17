@@ -99,23 +99,23 @@ export default function ProductsSection() {
 
   if (loading) {
     return (
-      <section className="py-8 sm:py-12 md:py-16 bg-background" id="products">
-        <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">ОНЦЛОХ БҮТЭЭГДЭХҮҮН</h2>
-            <Link href="/all-products">
-              <Button
-                variant="link"
-                className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1 whitespace-nowrap"
-              >
-                <span className="hidden sm:inline">БУСАД БҮТЭЭГДЭХҮҮН</span>
-                <span className="sm:hidden">БУСАД</span>
-                <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-              </Button>
-            </Link>
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-white via-gray-50/50 to-white" id="products">
+        <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 md:mb-16">
+            <div className="mb-4 sm:mb-0">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent mb-2">
+                ОНЦЛОХ БҮТЭЭГДЭХҮҮН
+              </h2>
+              <p className="text-sm sm:text-base text-gray-600">
+                Шинэ, чанартай бүтээгдэхүүнүүд
+              </p>
+            </div>
           </div>
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Ачаалж байна...</p>
+          <div className="text-center py-16">
+            <div className="inline-flex items-center gap-3 text-gray-600">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <p className="text-base">Ачаалж байна...</p>
+            </div>
           </div>
         </div>
       </section>
@@ -125,72 +125,90 @@ export default function ProductsSection() {
   if (products.length === 0) return null
 
   return (
-    <section className="py-8 sm:py-12 md:py-16 bg-background" id="products">
-      <div className="container mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">ОНЦЛОХ БҮТЭЭГДЭХҮҮН</h2>
+    <section className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-white via-gray-50/50 to-white" id="products">
+      <div className="container mx-auto px-4 md:px-6 max-w-7xl">
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 md:mb-16">
+          <div className="mb-4 sm:mb-0">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent mb-2">
+              ОНЦЛОХ БҮТЭЭГДЭХҮҮН
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600">
+              Шинэ, чанартай бүтээгдэхүүнүүд
+            </p>
+          </div>
           <Link href="/all-products">
             <Button
-              variant="link"
-              className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1 whitespace-nowrap"
+              variant="outline"
+              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200 shadow-sm hover:shadow-md hover:scale-105 group"
             >
               <span className="hidden sm:inline">БУСАД БҮТЭЭГДЭХҮҮН</span>
               <span className="sm:hidden">БУСАД</span>
-              <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+              <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
 
+        {/* Products Carousel */}
         <Carousel
           opts={{ align: "start", loop: products.length > 1 }}
           setApi={setCarouselApi}
-          className="group relative rounded-lg border border-border bg-secondary p-2 shadow-md"
+          className="group relative"
         >
-          <CarouselContent className="gap-2 sm:gap-3 md:gap-4">
+          <CarouselContent className="-ml-2 md:-ml-4 gap-4 md:gap-6">
             {products.map((product) => (
               <CarouselItem
                 key={product.id}
-                className="basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
               >
-                <Link href={`/products/${product.id}`} className="block h-full">
-                  <Card className="h-full cursor-pointer transition-shadow hover:shadow-lg">
-                    <CardContent className="flex h-full flex-col p-3 sm:p-4 md:p-6">
-                      <div className="mb-3 flex aspect-square items-center justify-center rounded bg-muted/30 sm:mb-4">
+                <Link href={`/products/${product.id}`} className="block h-full group/card">
+                  <Card className="h-full cursor-pointer border-2 border-gray-200 hover:border-blue-500 transition-all duration-300 hover:shadow-xl bg-white overflow-hidden group-hover/card:scale-[1.02]">
+                    <CardContent className="flex h-full flex-col p-4 sm:p-5 md:p-6">
+                      {/* Product Image */}
+                      <div className="mb-4 sm:mb-5 flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 group-hover/card:from-blue-50 group-hover/card:to-cyan-50 transition-all duration-300 overflow-hidden">
                         <Image
                           src={product.image || "/placeholder.svg"}
                           alt={product.name}
-                          width={200}
-                          height={200}
-                          className="h-full w-full object-contain p-3 md:p-4"
+                          width={300}
+                          height={300}
+                          className="h-full w-full object-contain p-4 md:p-6 transition-transform duration-300 group-hover/card:scale-110"
                         />
                       </div>
-                      <h3 className="mb-1 text-sm font-semibold text-foreground md:text-base">
-                        {product.code}
-                      </h3>
-                      <p className="mb-2 text-xs text-muted-foreground line-clamp-2 md:mb-3">
-                        {product.description ?? product.name}
-                      </p>
-                      {product.brandLogo ? (
-                        <div className="mt-auto flex items-center pt-2">
-                          <Image
-                            src={product.brandLogo}
-                            alt={product.brandName || "Brand"}
-                            width={96}
-                            height={32}
-                            className="h-6 md:h-8 object-contain"
-                          />
-                        </div>
-                      ) : null}
+                      
+                      {/* Product Info */}
+                      <div className="flex flex-col flex-grow">
+                        <h3 className="mb-2 text-base sm:text-lg font-bold text-gray-900 group-hover/card:text-blue-600 transition-colors">
+                          {product.code}
+                        </h3>
+                        <p className="mb-4 text-sm text-gray-600 line-clamp-2 flex-grow">
+                          {product.description ?? product.name}
+                        </p>
+                        
+                        {/* Brand Logo */}
+                        {product.brandLogo ? (
+                          <div className="mt-auto flex items-center pt-3 border-t border-gray-100">
+                            <Image
+                              src={product.brandLogo}
+                              alt={product.brandName || "Brand"}
+                              width={120}
+                              height={40}
+                              className="h-6 md:h-8 object-contain opacity-70 group-hover/card:opacity-100 transition-opacity"
+                            />
+                          </div>
+                        ) : null}
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
               </CarouselItem>
             ))}
           </CarouselContent>
+          
+          {/* Navigation Arrows */}
           {products.length > 1 ? (
             <>
-              <CarouselPrevious className="hidden sm:flex !left-3 sm:!left-4 md:!left-5 bg-white text-foreground shadow-lg transition-colors hover:bg-white/90" />
-              <CarouselNext className="hidden sm:flex !right-3 sm:!right-4 md:!right-5 bg-white text-foreground shadow-lg transition-colors hover:bg-white/90" />
+              <CarouselPrevious className="hidden sm:flex !left-0 sm:!left-2 md:!left-4 bg-white/90 backdrop-blur-sm text-gray-700 border-2 border-gray-200 hover:border-blue-500 hover:bg-white shadow-lg transition-all hover:scale-110" />
+              <CarouselNext className="hidden sm:flex !right-0 sm:!right-2 md:!right-4 bg-white/90 backdrop-blur-sm text-gray-700 border-2 border-gray-200 hover:border-blue-500 hover:bg-white shadow-lg transition-all hover:scale-110" />
             </>
           ) : null}
         </Carousel>
