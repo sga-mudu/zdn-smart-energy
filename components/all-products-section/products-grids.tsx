@@ -251,7 +251,7 @@ export function ProductGrid({ selectedBrand }: ProductGridProps) {
             // Load ZDN logo
             let zdnLogoBase64 = ''
             try {
-                zdnLogoBase64 = await loadImageAsBase64('/zdn-logo.png')
+                zdnLogoBase64 = await loadImageAsBase64('/zdn-logo.svg')
             } catch (error) {
                 console.warn('Could not load ZDN logo:', error)
             }

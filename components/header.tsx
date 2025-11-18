@@ -14,11 +14,11 @@ export default function Header() {
       <div className="container mx-auto px-4 md:px-6 max-w-7xl py-4 md:py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center group">
           <Image
-            src="/zdn-logo.png"
-            alt="ZDN Smart Energy"
+            src="/zdn-logo.svg"
+            alt="ZDN Smart Energy - Газрын тосны лаборатори, тооны хяналт"
             width={120}
             height={50}
-            className="h-10 md:h-15 w-auto transition-transform duration-300 group-hover:scale-105"
+            className="h-10 md:h-12 w-auto transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 768px) 120px, 150px"
             quality={90}
             priority

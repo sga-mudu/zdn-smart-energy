@@ -152,29 +152,29 @@ export default function HeroSection() {
       {/* Navigation arrows */}
       <button
         onClick={goToPrevious}
-        className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-3 md:p-4 rounded-full transition-all duration-200 hover:scale-110 border border-white/20"
+        className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-2.5 sm:p-3 md:p-4 rounded-full transition-all duration-200 hover:scale-110 border border-white/20 min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Previous slide"
       >
         <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
       </button>
       <button
         onClick={goToNext}
-        className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-3 md:p-4 rounded-full transition-all duration-200 hover:scale-110 border border-white/20"
+        className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-2.5 sm:p-3 md:p-4 rounded-full transition-all duration-200 hover:scale-110 border border-white/20 min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Next slide"
       >
         <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
       </button>
 
       {/* Slide indicators */}
-      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2 md:gap-3">
+      <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2 md:gap-3">
         {heroSlides.map((_, index) => (
           <button
             key={index}
             onClick={() => goToSlide(index)}
-            className={`rounded-full transition-all duration-300 ${
+            className={`rounded-full transition-all duration-300 min-w-[32px] min-h-[8px] sm:min-h-[12px] ${
               currentSlide === index
-                ? "bg-white w-10 md:w-12 h-2 md:h-3"
-                : "bg-white/50 hover:bg-white/75 w-2 md:w-3 h-2 md:h-3"
+                ? "bg-white w-8 sm:w-10 md:w-12 h-2 sm:h-2.5 md:h-3"
+                : "bg-white/50 hover:bg-white/75 w-2 sm:w-2.5 md:w-3 h-2 sm:h-2.5 md:h-3"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

@@ -204,12 +204,12 @@ function Footer() {
                   rows={8}
                   required
                   disabled={isSubmitting}
-                  className="w-full px-4 py-3 bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:border-gray-300 shadow-sm pr-14"
+                  className="w-full px-4 py-3 pb-12 sm:pb-14 bg-white border border-gray-200 text-gray-900 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:border-gray-300 shadow-sm"
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white p-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px]"
+                  className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white p-2.5 sm:p-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px]"
                   aria-label="Send message"
                 >
                   {isSubmitting ? (
@@ -223,11 +223,26 @@ function Footer() {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-16 pt-8 border-t border-gray-200 text-center">
-          <p className="text-xs md:text-sm text-gray-500">
-            © COPYRIGHT 2025 ZDN SMART ENERGY LLC. ALL RIGHTS RESERVED.
-          </p>
+        {/* Copyright and Agency Link */}
+        <div className="mt-16 pt-8 border-t border-gray-200">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-xs md:text-sm text-gray-500 text-center md:text-left">
+              © 2016-2025 БҮХ ЭРХ ХУУЛИАР ХАМГААЛАГДСАН.
+
+
+            </p>
+            <div className="text-xs md:text-sm text-gray-500">
+              <span className="text-gray-400">Хөгжүүлсэн: </span>
+              <a
+                href="https://www.gobitech.dev/mn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 font-medium transition-colors hover:underline"
+              >
+                Gobitech
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
