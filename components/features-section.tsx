@@ -28,11 +28,6 @@ interface Service {
     analysisTypes?: AnalysisType[]
     serviceScope?: string[]
     controlServiceTypes?: string[]
-    pricing?: {
-      service: string
-      price: string
-      note?: string
-    }
     contact?: {
       phone?: string[]
       email?: string[]
@@ -148,7 +143,7 @@ const services: Service[] = [
     ctaLink: "#contact",
     details: {
       description: "Тооны хяналтын алба",
-      fullDescription: "\"ЗДТ Ди Эн Смарт Энерджи\" ХХК нь 2023 оноос газрын тос, газрын тосны бүтээгдэхүүнийг MNS 150/IЕС 17025-2018 стандартаар баталгаажсан арга, дээжний тоног төхөөрөмжөөр чанарын шинжилгээ хийж эхэлсэн. Үүнтэй зэрэгцүүлэн MNS ISO/IEC 17005-2013 стандартын нэрвүүлэн тооны хяналтын албыг байгуулж, ҮИТ-аас итгэмжлэгдсэн.",
+      fullDescription: "\"ЗДТ Ди Эн Смарт Энерджи\" ХХК нь 2023 оноос газрын тос, газрын тосны бүтээгдэхүүнийг MNS 150/IЕС 17025-2018 стандартаар баталгаажсан арга, дээжний тоног төхөөрөмжөөр чанарын шинжилгээ хийж эхэлсэн. Үүнтэй зэрэгцүүлэн MNS ISO/IEC 17025-2013 стандартын нэрвүүлэн тооны хяналтын албыг байгуулж, ҮИТ-аас итгэмжлэгдсэн.",
       serviceScope: [
         "Экспорт, импортын газрын тос, газрын тосны бүтээгдэхүүн",
         "Тээвэрлэлт, хадгалалт, түгээлтийн үеийн тооны хөндлөнгийн хяналт",
@@ -162,11 +157,6 @@ const services: Service[] = [
         "Усны хэмжээ",
         "Эзлэхүүн жин (≤ 80000 литр хүртэл)",
       ],
-      pricing: {
-        service: "Тооны хяналт",
-        price: "20,000₮",
-        note: "Хурдан шуурхай үйлчилгээ",
-      },
       contact: {
         phone: ["+976-8614-4444", "+976-8087-8025"],
         email: ["gankhuugansukh317@gmail.com"],
@@ -590,25 +580,6 @@ export default function FeaturesSection() {
                         </li>
                       ))}
                     </ul>
-                  </div>
-                )}
-
-                {/* Pricing (Monitoring Service) */}
-                {selectedService.details.pricing && (
-                  <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg p-4">
-                    <h4 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
-                      💲 Үйлчилгээний үнэ
-                    </h4>
-                    <div className="space-y-1">
-                      <p className="text-base md:text-lg font-semibold text-gray-900">
-                        {selectedService.details.pricing.service} – {selectedService.details.pricing.price}
-                      </p>
-                      {selectedService.details.pricing.note && (
-                        <p className="text-sm md:text-base text-gray-600">
-                          {selectedService.details.pricing.note}
-                        </p>
-                      )}
-                    </div>
                   </div>
                 )}
 
