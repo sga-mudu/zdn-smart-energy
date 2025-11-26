@@ -438,11 +438,12 @@ export default function FeaturesSection() {
               
               {/* Close Button */}
               <button
+                type="button"
                 onClick={handleCloseModal}
-                className="absolute top-3 right-3 z-10 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 flex items-center justify-center transition-all duration-200 text-white hover:scale-110"
+                className="absolute top-3 right-3 z-20 w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 flex items-center justify-center transition-all duration-200 text-white hover:scale-110 cursor-pointer"
                 aria-label="Close modal"
               >
-                <X className="w-5 h-5 md:w-6 md:h-6" />
+                <X className="w-5 h-5 md:w-6 md:h-6 pointer-events-none" />
               </button>
 
               {/* Header Content */}

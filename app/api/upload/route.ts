@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { requireAuth } from "@/lib/auth"
 import { env } from "@/lib/env"
 import { errorResponse, successResponse } from "@/lib/api-utils"
-import { writeFile, mkdir } from "fs/promises"
+import { writeFile, mkdir, access, constants } from "fs/promises"
 import { join } from "path"
 import { existsSync } from "fs"
 import { randomBytes } from "crypto"
@@ -103,9 +103,33 @@ export async function POST(req: NextRequest) {
     }
 
     // Create upload directory if it doesn't exist
+    // Use process.cwd() which resolves to the app root on cPanel
     const uploadDir = join(process.cwd(), "public", "uploads", type)
+    
+    // Create directory with proper permissions (755 for cPanel)
     if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
+      try {
+        await mkdir(uploadDir, { recursive: true, mode: 0o755 })
+      } catch (dirError) {
+        console.error(`Failed to create upload directory: ${uploadDir}`, dirError)
+        return errorResponse(
+          new Error("Failed to create upload directory"),
+          `Unable to create upload directory. Please ensure the public/uploads folder exists and is writable.`,
+          500
+        )
+      }
+    }
+
+    // Verify directory is writable (important for cPanel)
+    try {
+      await access(uploadDir, constants.W_OK)
+    } catch (accessError) {
+      console.error(`Upload directory is not writable: ${uploadDir}`, accessError)
+      return errorResponse(
+        new Error("Upload directory not writable"),
+        `Upload directory is not writable. Please check file permissions on cPanel (should be 755 for directories).`,
+        500
+      )
     }
 
     // Generate secure filename
@@ -116,8 +140,17 @@ export async function POST(req: NextRequest) {
     const filename = `${timestamp}_${randomString}.${extension}`
     const filepath = join(uploadDir, filename)
 
-    // Save file
-    await writeFile(filepath, buffer)
+    // Save file with proper permissions (644 for files on cPanel)
+    try {
+      await writeFile(filepath, buffer, { mode: 0o644 })
+    } catch (writeError) {
+      console.error(`Failed to write file: ${filepath}`, writeError)
+      return errorResponse(
+        new Error("Failed to save file"),
+        `Unable to save uploaded file. Please check file permissions on cPanel.`,
+        500
+      )
+    }
 
     // Return the public URL
     const publicUrl = `/uploads/${type}/${filename}`
@@ -128,7 +161,40 @@ export async function POST(req: NextRequest) {
       filename,
     })
   } catch (error) {
-    return errorResponse(error, "Failed to upload file")
+    // Enhanced error logging for cPanel debugging
+    console.error("Upload error:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      cwd: process.cwd(),
+      nodeEnv: process.env.NODE_ENV,
+    })
+    
+    // Provide more helpful error messages for common cPanel issues
+    if (error instanceof Error) {
+      if (error.message.includes("EACCES") || error.message.includes("permission")) {
+        return errorResponse(
+          error,
+          "Permission denied. Please ensure the public/uploads directory has write permissions (755) on cPanel.",
+          500
+        )
+      }
+      if (error.message.includes("ENOENT")) {
+        return errorResponse(
+          error,
+          "Upload directory not found. Please create the public/uploads directory on cPanel.",
+          500
+        )
+      }
+      if (error.message.includes("ENOSPC")) {
+        return errorResponse(
+          error,
+          "Insufficient disk space on server. Please contact your hosting provider.",
+          500
+        )
+      }
+    }
+    
+    return errorResponse(error, "Failed to upload file. Please check server logs for details.")
   }
 }
 
