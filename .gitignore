@@ -27,3 +27,7 @@ yarn-error.log*
 next-env.d.ts
 /lib/generated/prisma
 
+# large files
+*.tar.gz
+zdn-smart-energy-deploy/
+
