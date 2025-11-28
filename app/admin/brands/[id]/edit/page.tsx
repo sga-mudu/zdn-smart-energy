@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "sonner"
 
 export default function EditBrand() {
   const router = useRouter()
@@ -25,30 +26,45 @@ export default function EditBrand() {
     featured: false,
   })
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleImageUpload = async (file: File, type: "product" | "brand") => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("type", type)
 
-    setUploadingLogo(true)
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("type", "brand")
-
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error("Upload failed")
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || "Upload failed"
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      setFormData((prev) => ({ ...prev, logo: data.url }))
+      if (!data.url) {
+        throw new Error("No URL returned from upload")
+      }
+      return data.url
     } catch (error) {
-      console.error("Upload error:", error)
-      alert("Failed to upload logo")
+      const message = error instanceof Error ? error.message : "Failed to upload image"
+      toast.error(`Upload error: ${message}`)
+      throw error
+    }
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingLogo(true)
+    try {
+      const url = await handleImageUpload(file, "brand")
+      setFormData((prev) => ({ ...prev, logo: url }))
+    } catch (error) {
+      // Error already handled
     } finally {
       setUploadingLogo(false)
     }

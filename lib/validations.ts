@@ -5,13 +5,38 @@ import { z } from 'zod'
 
 // Helper to validate URL, relative path, or empty string
 // Accepts: empty string, null, relative paths (/path/to/file), or full URLs (http://...)
-const urlOrEmpty = z.union([
-  z.literal(''),  // Empty string - must be first
-  z.null(),  // Null
-  z.undefined(),  // Undefined
-  z.string().startsWith('/'),  // Relative path (starts with /)
-  z.string().url(),  // Full URL (http:// or https://)
-]).optional().nullable()
+const urlOrEmpty = z.preprocess(
+  (val) => {
+    // Convert empty string, null, or undefined to null for consistency
+    if (val === '' || val === null || val === undefined) return null
+    // Trim whitespace from strings
+    if (typeof val === 'string') {
+      const trimmed = val.trim()
+      return trimmed || null
+    }
+    return val
+  },
+  z.union([
+    z.null(),
+    // Custom validation: accept strings that are either relative paths or URLs
+    z.string().refine(
+      (val) => {
+        // Must be a non-empty string
+        if (!val || val.length === 0) return false
+        // Check if it's a relative path (starts with /)
+        if (val.startsWith('/')) return true
+        // Check if it's a valid URL
+        try {
+          new URL(val)
+          return true
+        } catch {
+          return false
+        }
+      },
+      { message: 'Must be a relative path (starting with /) or a valid URL' }
+    ),
+  ]).optional().nullable()
+)
 
 // Product Schemas
 export const productCreateSchema = z.object({
@@ -35,7 +60,7 @@ export const productUpdateSchema = productCreateSchema.partial().extend({
 export const categoryCreateSchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100),
   description: z.string().max(2000).optional().nullable(),
-  image: z.string().url().optional().nullable().or(z.literal('')),
+  image: urlOrEmpty, // Accepts relative paths (/uploads/...), full URLs, or empty
   parentId: z.string().optional().nullable(),
 })
 
@@ -44,9 +69,14 @@ export const categoryUpdateSchema = categoryCreateSchema.partial()
 // Brand Schemas
 export const brandCreateSchema = z.object({
   name: z.string().min(1, 'Brand name is required').max(100),
-  logo: z.string().url().optional().nullable().or(z.literal('')),
+  logo: urlOrEmpty, // Accepts relative paths (/uploads/...), full URLs, or empty
   description: z.string().max(2000).optional().nullable(),
-  website: z.string().url().optional().nullable().or(z.literal('')),
+  website: z.union([
+    z.literal(''),  // Empty string
+    z.null(),  // Null
+    z.undefined(),  // Undefined
+    z.string().url(),  // Full URL (http:// or https://)
+  ]).optional().nullable(), // Website must be a valid URL or empty
   featured: z.boolean().default(false),
 })
 

@@ -1,0 +1,198 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+
+export default function NewBrand() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    logo: "",
+    website: "",
+    featured: false,
+  })
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingLogo(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("type", "brand")
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error("Upload failed")
+      }
+
+      const data = await response.json()
+      setFormData((prev) => ({ ...prev, logo: data.url }))
+    } catch (error) {
+      console.error("Upload error:", error)
+      alert("Failed to upload logo")
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const response = await fetch("/api/admin/brands", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        router.push("/admin/dashboard")
+      } else {
+        alert("Failed to create brand")
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error(error)
+      alert("An error occurred")
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="mb-6"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Brand</CardTitle>
+            <CardDescription>Add a new brand to your catalog</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Brand Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                  disabled={loading}
+                  placeholder="Brand description and information..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="logo">Brand Logo</Label>
+                  <div className="space-y-2">
+                    <Input
+                      id="logoFile"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={loading || uploadingLogo}
+                      className="cursor-pointer"
+                    />
+                    {uploadingLogo && <p className="text-xs text-muted-foreground">Uploading...</p>}
+                    {formData.logo && (
+                      <div className="mt-2">
+                        <p className="text-xs text-muted-foreground mb-1">Current logo:</p>
+                        <img src={formData.logo} alt="Preview" className="w-20 h-20 object-cover rounded" />
+                      </div>
+                    )}
+                    <Input
+                      id="logo"
+                      type="text"
+                      value={formData.logo}
+                      onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                      disabled={loading}
+                      placeholder="Or enter logo URL"
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website URL (Optional)</Label>
+                  <Input
+                    id="website"
+                    type="text"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    disabled={loading}
+                    placeholder="https://brand-website.com"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="featured"
+                  checked={formData.featured}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, featured: !!checked })
+                  }
+                  disabled={loading}
+                />
+                <Label htmlFor="featured" className="cursor-pointer">
+                  Featured Brand
+                </Label>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.back()}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Creating..." : "Create Brand"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+

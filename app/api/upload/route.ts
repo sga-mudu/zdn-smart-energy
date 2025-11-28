@@ -133,10 +133,30 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate secure filename
+    // Extract extension from original filename BEFORE sanitization
+    const originalName = file.name
+    const lastDotIndex = originalName.lastIndexOf(".")
+    let extension = lastDotIndex > 0 
+      ? originalName.substring(lastDotIndex + 1).toLowerCase() 
+      : ""
+    
+    // If no extension found, determine from MIME type
+    if (!extension) {
+      const mimeToExt: Record<string, string> = {
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+      }
+      extension = mimeToExt[file.type] || "jpg"
+    }
+    
+    // Sanitize extension (only allow alphanumeric, max 5 chars)
+    extension = extension.replace(/[^a-z0-9]/g, "").substring(0, 5) || "jpg"
+    
     const timestamp = Date.now()
     const randomString = randomBytes(8).toString("hex")
-    const sanitizedName = sanitizeFilename(file.name)
-    const extension = sanitizedName.split(".").pop() || "jpg"
     const filename = `${timestamp}_${randomString}.${extension}`
     const filepath = join(uploadDir, filename)
 

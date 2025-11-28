@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "sonner"
 
 export default function NewBrand() {
   const router = useRouter()
@@ -22,30 +23,45 @@ export default function NewBrand() {
     featured: false,
   })
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleImageUpload = async (file: File, type: "product" | "brand") => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("type", type)
 
-    setUploadingLogo(true)
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("type", "brand")
-
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       })
 
       if (!response.ok) {
-        throw new Error("Upload failed")
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || "Upload failed"
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      setFormData((prev) => ({ ...prev, logo: data.url }))
+      if (!data.url) {
+        throw new Error("No URL returned from upload")
+      }
+      return data.url
     } catch (error) {
-      console.error("Upload error:", error)
-      alert("Failed to upload logo")
+      const message = error instanceof Error ? error.message : "Failed to upload image"
+      toast.error(`Upload error: ${message}`)
+      throw error
+    }
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingLogo(true)
+    try {
+      const url = await handleImageUpload(file, "brand")
+      setFormData((prev) => ({ ...prev, logo: url }))
+    } catch (error) {
+      // Error already handled
     } finally {
       setUploadingLogo(false)
     }
@@ -55,22 +71,56 @@ export default function NewBrand() {
     e.preventDefault()
     setLoading(true)
 
+    // Prepare data for submission - ensure empty strings are handled correctly
+    const submitData = {
+      name: formData.name.trim(),
+      description: formData.description.trim() || null,
+      // Preserve logo as-is if it's a valid path, otherwise null
+      logo: formData.logo && formData.logo.trim() ? formData.logo.trim() : null,
+      website: formData.website.trim() || null,
+      featured: formData.featured,
+    }
+
+    console.log("Submitting brand data:", submitData)
+
     try {
       const response = await fetch("/api/admin/brands", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
+      const responseData = await response.json().catch(() => ({}))
+
       if (response.ok) {
+        toast.success("Brand created successfully")
         router.push("/admin/dashboard")
       } else {
-        alert("Failed to create brand")
+        console.error("Brand creation error:", responseData)
+        console.error("Full response:", responseData)
+        
+        // Show detailed validation errors
+        let errorMessage = "Failed to create brand"
+        if (responseData.details && Array.isArray(responseData.details)) {
+          errorMessage = responseData.details
+            .map((d: any) => {
+              const field = d.path || "unknown"
+              const msg = d.message || "Invalid value"
+              const received = d.received !== undefined ? ` (received: ${JSON.stringify(d.received)})` : ""
+              return `${field}: ${msg}${received}`
+            })
+            .join("\n")
+        } else if (responseData.error) {
+          errorMessage = responseData.error
+        }
+        
+        console.error("Error message:", errorMessage)
+        toast.error(`Error: ${errorMessage}`)
         setLoading(false)
       }
     } catch (error) {
-      console.error(error)
-      alert("An error occurred")
+      console.error("Brand creation error:", error)
+      alert("An error occurred. Please check the console for details.")
       setLoading(false)
     }
   }

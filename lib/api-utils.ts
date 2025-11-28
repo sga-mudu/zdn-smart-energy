@@ -105,26 +105,43 @@ export async function validateRequest<T>(
   request: Request,
   schema: z.ZodSchema<T>
 ): Promise<{ success: true; data: T } | { success: false; response: NextResponse; error?: unknown }> {
+  let body: any = null
   try {
-    const body = await request.json()
+    body = await request.json()
     
-    // Log request body in development for debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Request body:', JSON.stringify(body, null, 2))
-    }
+    // Log request body (always log for debugging on cPanel)
+    console.log('Request body received:', JSON.stringify(body, null, 2))
     
     const data = schema.parse(body)
     return { success: true, data }
   } catch (error) {
-    // Log validation errors in development
-    if (process.env.NODE_ENV === 'development' && error instanceof z.ZodError) {
-      console.error('Validation error details:', {
+    // Log validation errors (always log in production for debugging)
+    if (error instanceof z.ZodError) {
+      const errorDetails = {
         errors: error.errors.map(e => ({
           path: e.path.join('.'),
           message: e.message,
-          code: e.code
+          code: e.code,
+          received: e.path.length > 0 && body ? (body as any)[e.path[0]] : undefined
         }))
-      })
+      }
+      console.error('Validation error details:', JSON.stringify(errorDetails, null, 2))
+      if (body) {
+        console.error('Request body received:', JSON.stringify(body, null, 2))
+      }
+      
+      // Return more detailed error response
+      return {
+        success: false,
+        response: NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: errorDetails.errors,
+          },
+          { status: 400 }
+        ),
+        error,
+      }
     }
     return {
       success: false,
