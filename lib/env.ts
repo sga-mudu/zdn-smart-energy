@@ -6,19 +6,18 @@
 function getEnvVar(name: string, defaultValue?: string): string {
   const value = process.env[name] || defaultValue
   
+  // Don't throw during module load - allow the module to load
+  // Validation will happen later when actually needed
   if (!value) {
-    const error = new Error(
-      `Missing required environment variable: ${name}. ` +
-      `Please check your .env file or environment configuration.`
-    )
-    
-    // In production, throw immediately
+    // Log warning but return empty string to allow module to load
+    // This prevents 500 errors on pages that don't need these values
     if (process.env.NODE_ENV === 'production') {
-      throw error
+      // In production, log error but don't throw (yet)
+      // This allows the login page to load even if env vars are missing
+      console.error(`⚠️  Missing environment variable: ${name}. Will fail when used.`)
+    } else {
+      console.warn(`⚠️  Missing environment variable: ${name}`)
     }
-    
-    // In development, log warning but return empty string to prevent crashes
-    console.warn(`⚠️  ${error.message}`)
     return ''
   }
   
@@ -57,23 +56,48 @@ export const env = {
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
 } as const
 
-// Validate on module load (server-side only)
-if (typeof window === 'undefined') {
-  // Validate required environment variables
-  if (!env.DATABASE_URL || !env.NEXTAUTH_SECRET) {
+// Lazy validation - only validate when actually accessing the values
+// This prevents module-load-time errors that would prevent the login page from loading
+let validationWarned = false
+
+function validateEnvVars() {
+  if (typeof window !== 'undefined') return // Client-side, skip validation
+  
+  if (validationWarned) return // Only warn once
+  
+  const missing = []
+  if (!env.DATABASE_URL) missing.push('DATABASE_URL')
+  if (!env.NEXTAUTH_SECRET) missing.push('NEXTAUTH_SECRET')
+  
+  if (missing.length > 0) {
+    validationWarned = true
+    
+    if (isProduction) {
+      // In production, log error but don't throw to allow login page to load
+      console.error('❌ CRITICAL: Missing environment variables:', missing.join(', '))
+      console.error('❌ Set these in cPanel → Node.js Selector → Environment Variables')
+      console.error('❌ See TROUBLESHOOTING_500_ERROR.md for help')
+      // Don't throw here - let individual operations fail gracefully
+    } else {
+      console.warn('⚠️  Missing environment variables:', missing.join(', '))
+    }
+  }
+}
+
+// Export validation function for use in critical paths
+export function ensureEnvVars(): void {
+  validateEnvVars()
+  
+  if (isProduction && typeof window === 'undefined') {
     const missing = []
     if (!env.DATABASE_URL) missing.push('DATABASE_URL')
     if (!env.NEXTAUTH_SECRET) missing.push('NEXTAUTH_SECRET')
     
-    const error = new Error(
-      `Missing required environment variables: ${missing.join(', ')}. ` +
-      `Please check your .env file or environment configuration.`
-    )
-    
-    if (isProduction) {
-      throw error
-    } else {
-      console.error('❌ Environment validation failed:', error.message)
+    if (missing.length > 0) {
+      throw new Error(
+        `Missing required environment variables: ${missing.join(', ')}. ` +
+        `Please set these in cPanel Node.js Selector → Environment Variables.`
+      )
     }
   }
 }

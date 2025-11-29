@@ -15,10 +15,6 @@ const FILE_SIGNATURES: Record<string, Buffer[]> = {
   "image/png": [
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
   ],
-  "image/webp": [
-    Buffer.from("RIFF", "ascii"),
-    Buffer.from("WEBP", "ascii"),
-  ],
   "image/gif": [
     Buffer.from("GIF89a", "ascii"),
     Buffer.from("GIF87a", "ascii"),
@@ -29,7 +25,19 @@ const FILE_SIGNATURES: Record<string, Buffer[]> = {
  * Validate file content by checking magic numbers
  */
 function validateFileContent(buffer: Buffer, mimeType: string): boolean {
-  const signatures = FILE_SIGNATURES[mimeType]
+  // Special handling for WEBP files
+  if (mimeType === "image/webp") {
+    // WEBP files start with "RIFF" at position 0, then 4 bytes for size, then "WEBP" at position 8
+    if (buffer.length < 12) return false
+    const riffHeader = buffer.slice(0, 4).toString("ascii")
+    const webpHeader = buffer.slice(8, 12).toString("ascii")
+    return riffHeader === "RIFF" && webpHeader === "WEBP"
+  }
+
+  // JPG and JPEG are the same format - use JPEG validation for both
+  const normalizedMimeType = mimeType === "image/jpg" ? "image/jpeg" : mimeType
+  
+  const signatures = FILE_SIGNATURES[normalizedMimeType]
   if (!signatures) return false
 
   return signatures.some((signature) => {

@@ -53,15 +53,20 @@ export default function NewProduct() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || "Upload failed"
+        const errorMessage = errorData.error || `Upload failed with status ${response.status}`
         throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      if (!data.url) {
-        throw new Error("No URL returned from upload")
+      
+      // Handle different response structures
+      const url = data.url || data.data?.url
+      if (!url) {
+        console.error("Upload response:", data)
+        throw new Error("No URL returned from upload. Invalid response format.")
       }
-      return data.url
+      
+      return url
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to upload image"
       toast.error(`Upload error: ${message}`)
@@ -77,8 +82,9 @@ export default function NewProduct() {
     try {
       const url = await handleImageUpload(file, "product")
       setFormData((prev) => ({ ...prev, image: url }))
+      toast.success("Image uploaded successfully")
     } catch (error) {
-      // Error already handled
+      // Error already handled in handleImageUpload
     } finally {
       setUploadingImage(false)
     }

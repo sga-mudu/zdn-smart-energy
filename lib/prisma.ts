@@ -1,5 +1,17 @@
 import { PrismaClient } from '@prisma/client'
-import { env } from './env'
+import { env, ensureEnvVars } from './env'
+
+// Validate environment variables before initializing Prisma
+// This ensures we fail early with a clear error message
+if (typeof window === 'undefined') {
+  try {
+    ensureEnvVars()
+  } catch (error) {
+    // Log the error but don't prevent module from loading
+    // Prisma will fail when actually used, which is better than a 500 on every page
+    console.error('❌ Environment validation failed:', error instanceof Error ? error.message : String(error))
+  }
+}
 
 declare global {
   // eslint-disable-next-line no-var

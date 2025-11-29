@@ -39,15 +39,20 @@ export default function EditBrand() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || "Upload failed"
+        const errorMessage = errorData.error || `Upload failed with status ${response.status}`
         throw new Error(errorMessage)
       }
 
       const data = await response.json()
-      if (!data.url) {
-        throw new Error("No URL returned from upload")
+      
+      // Handle different response structures
+      const url = data.url || data.data?.url
+      if (!url) {
+        console.error("Upload response:", data)
+        throw new Error("No URL returned from upload. Invalid response format.")
       }
-      return data.url
+      
+      return url
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to upload image"
       toast.error(`Upload error: ${message}`)
@@ -63,8 +68,9 @@ export default function EditBrand() {
     try {
       const url = await handleImageUpload(file, "brand")
       setFormData((prev) => ({ ...prev, logo: url }))
+      toast.success("Logo uploaded successfully")
     } catch (error) {
-      // Error already handled
+      // Error already handled in handleImageUpload
     } finally {
       setUploadingLogo(false)
     }
@@ -102,7 +108,7 @@ export default function EditBrand() {
 
     try {
       const response = await fetch(`/api/admin/brands/${id}`, {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       })

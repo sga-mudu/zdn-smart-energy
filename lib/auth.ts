@@ -2,9 +2,14 @@ import { getServerSession } from "next-auth/next"
 import { Session, NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
-import { env } from "@/lib/env"
+import { env, ensureEnvVars } from "@/lib/env"
 import bcrypt from "bcryptjs"
 import { ApiError } from "./api-utils"
+
+// Check if NextAuth is properly configured
+const isNextAuthConfigured = () => {
+  return !!(env.NEXTAUTH_SECRET && env.NEXTAUTH_SECRET.length > 0)
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -17,6 +22,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials")
+        }
+
+        // Check if NextAuth is configured
+        if (!isNextAuthConfigured()) {
+          throw new Error("Authentication not configured. Please set NEXTAUTH_SECRET.")
         }
 
         try {
@@ -67,7 +77,9 @@ export const authOptions: NextAuthOptions = {
       return session
     }
   },
-  secret: env.NEXTAUTH_SECRET,
+  // Use a fallback secret if not configured (NextAuth requires a secret)
+  // This allows the app to load but auth won't work until properly configured
+  secret: env.NEXTAUTH_SECRET || "temp-secret-change-in-production",
   debug: env.isDevelopment,
 }
 
@@ -76,13 +88,34 @@ export const authOptions: NextAuthOptions = {
  * Wrapper around getServerSession for consistent usage
  */
 export async function getSession(): Promise<Session | null> {
+  // Early return if NextAuth is not configured
+  if (!isNextAuthConfigured()) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error("❌ NEXTAUTH_SECRET is not set. Authentication will not work.")
+    }
+    return null
+  }
+
   try {
     // In App Router, getServerSession automatically reads from cookies
     const session = await getServerSession(authOptions)
     return session
   } catch (error) {
-    // Only log in development to avoid exposing errors
-    if (process.env.NODE_ENV === 'development') {
+    // Log error for debugging (helps identify database connection issues)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    
+    // In production, log to help diagnose issues without exposing details
+    if (process.env.NODE_ENV === 'production') {
+      console.error("❌ Error getting session:", errorMessage)
+      // Check if it's a database connection error
+      if (errorMessage.includes('database') || errorMessage.includes('Prisma') || errorMessage.includes('connect')) {
+        console.error("❌ Database connection issue. Check DATABASE_URL and ensure database is accessible.")
+      }
+      // Check if it's a NextAuth configuration error
+      if (errorMessage.includes('NEXTAUTH_SECRET') || errorMessage.includes('secret')) {
+        console.error("❌ NextAuth configuration issue. Check NEXTAUTH_SECRET is set correctly.")
+      }
+    } else {
       console.error("Error getting session:", error)
     }
     return null

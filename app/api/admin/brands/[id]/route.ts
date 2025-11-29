@@ -1,56 +1,65 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { NextRequest } from "next/server"
+import { requireAuth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { idParamSchema } from "@/lib/validations"
+import { errorResponse, successResponse } from "@/lib/api-utils"
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
     const { id } = await params
+    const paramValidation = idParamSchema.safeParse({ id })
+
+    if (!paramValidation.success) {
+      return errorResponse(paramValidation.error, "Invalid brand ID")
+    }
 
     const brand = await prisma.brand.findUnique({
       where: { id }
     })
 
     if (!brand) {
-      return NextResponse.json({ error: "Brand not found" }, { status: 404 })
+      return errorResponse(new Error("Brand not found"), "Brand not found", 404)
     }
 
-    return NextResponse.json(brand)
+    return successResponse(brand)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to fetch brand")
   }
 }
 
-export async function PUT(
+export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
     const { id } = await params
+    const paramValidation = idParamSchema.safeParse({ id })
+
+    if (!paramValidation.success) {
+      return errorResponse(paramValidation.error, "Invalid brand ID")
+    }
+
     const body = await req.json()
     const { name, logo, description, website, featured } = body
 
     if (!name) {
-      return NextResponse.json(
-        { error: "Brand name is required" },
-        { status: 400 }
-      )
+      return errorResponse(new Error("Brand name is required"), "Brand name is required", 400)
+    }
+
+    // Check if brand exists
+    const existingBrand = await prisma.brand.findUnique({
+      where: { id }
+    })
+
+    if (!existingBrand) {
+      return errorResponse(new Error("Brand not found"), "Brand not found", 404)
     }
 
     const brand = await prisma.brand.update({
@@ -64,10 +73,9 @@ export async function PUT(
       }
     })
 
-    return NextResponse.json(brand)
+    return successResponse(brand)
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to update brand")
   }
 }
 
@@ -76,21 +84,43 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    await requireAuth()
 
     const { id } = await params
+    const paramValidation = idParamSchema.safeParse({ id })
+
+    if (!paramValidation.success) {
+      return errorResponse(paramValidation.error, "Invalid brand ID")
+    }
+
+    // Check if brand exists
+    const brand = await prisma.brand.findUnique({
+      where: { id }
+    })
+
+    if (!brand) {
+      return errorResponse(new Error("Brand not found"), "Brand not found", 404)
+    }
+
+    // Check if there are products using this brand name
+    const productsCount = await prisma.product.count({
+      where: { brandName: brand.name }
+    })
+
+    if (productsCount > 0) {
+      return errorResponse(
+        new Error("Cannot delete brand with associated products"),
+        `Cannot delete brand. There are ${productsCount} product(s) using this brand. Please update or remove those products first.`,
+        400
+      )
+    }
 
     await prisma.brand.delete({
       where: { id }
     })
 
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true })
   } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return errorResponse(error, "Failed to delete brand")
   }
 }

@@ -1,22 +1,23 @@
 # ============================================
-# Next.js cPanel CloudLinux .htaccess Configuration
+# Next.js Phusion Passenger Configuration
 # ============================================
-# ⚠️ IMPORTANT: Replace YOUR_NODEJS_PORT with your actual port number
-# Find your port in cPanel → Node.js Selector → Your App
-# It will show something like: http://yourdomain.com:3000
-# Use only the number (e.g., 3000)
-# ============================================
+
+# Passenger Configuration
+PassengerEnabled On
+PassengerAppRoot /home/zdnmnkw5/public_html
+PassengerAppType node
+PassengerStartupFile app.js
+
+# Environment Variables (CRITICAL - These must be set here for Passenger)
+PassengerEnvVar NODE_ENV "production"
+PassengerEnvVar DATABASE_URL "mysql://zdnmnkw5_admin_user:Zdn%40616498283@localhost:3306/zdnmnkw5_website?connection_limit=3&pool_timeout=20"
+PassengerEnvVar NEXTAUTH_SECRET "dAH+JgHlJ0UJ8DZWWXKxvPCxliN8yJu9Okicamw581s="
+PassengerEnvVar NEXTAUTH_URL "https://zdn.mn"
 
 # Enable Rewrite Engine
 RewriteEngine On
 
-# Enable Proxy Module (required for reverse proxy)
-<IfModule mod_proxy.c>
-  ProxyPreserveHost On
-  ProxyRequests Off
-</IfModule>
-
-# Allow Next.js static assets to be served directly (bypass proxy)
+# Allow Next.js static assets to be served directly
 RewriteRule ^_next/static/(.*)$ - [L]
 RewriteRule ^_next/image/(.*)$ - [L]
 RewriteRule ^_next/webpack-hmr$ - [L]
@@ -28,14 +29,13 @@ RewriteRule ^sitemap.xml$ - [L]
 RewriteRule ^sitemap.*\.xml$ - [L]
 RewriteRule ^(public|uploads|images|static)/.*$ - [L]
 
-# If file or directory exists, serve it directly (bypass proxy)
+# If file or directory exists, serve it directly
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Reverse proxy all other requests to Node.js app
-# ⚠️ REPLACE YOUR_NODEJS_PORT with your actual port (e.g., 3000, 3001, etc.)
-RewriteRule ^(.*)$ http://127.0.0.1:YOUR_NODEJS_PORT/$1 [P,L]
+# Pass all other requests to Next.js (Passenger handles routing)
+RewriteRule ^(.*)$ - [L]
 
 # ============================================
 # Security Headers
